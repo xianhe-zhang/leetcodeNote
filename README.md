@@ -1,0 +1,2 @@
+# leetcodeNote
+Continully updating repo

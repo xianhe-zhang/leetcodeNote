@@ -1,0 +1,44 @@
+/* flex 三色骰子 */
+.box {
+  display: flex;
+  justify-content: center; /* 两端对齐 */
+}
+
+.item{
+  /* 这里写背景颜色，大小，边框的样式之类的 */
+  background-color: aliceblue;
+}
+
+.item:nth-child(2) {
+  align-self: center;
+}
+
+.item:nth-child(3) {
+  align-self: flex-end;
+}
+
+
+/* 满屏品字布局 */
+.top{
+  margin: 0 auto;
+}
+.left{
+  float: left;
+  width: 50%;
+}
+.right{
+  width: 50%;
+  left: 50%;
+}
+
+
+/* 三角形 */
+.div{
+  width: 0;
+  height: 0;
+  border-top: 40px solid transparent;
+  border-right: 40px solid transparent;
+  border-bottom: 40px solid transparent;
+  border-left: 40px solid firebrick;
+}
+

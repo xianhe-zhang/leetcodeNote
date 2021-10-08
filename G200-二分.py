@@ -4,7 +4,7 @@ class Solution:
     def mySqrt(self, x: int) -> int:
         y = math.sqrt(x)
         return int(y)        
-2-二分——太臃肿了
+2-二分 #太臃肿了
 class Solution:
     def mySqrt(self, x: int) -> int:
         left = 0
@@ -26,7 +26,7 @@ class Solution:
                 print(right*right)
                 return left if right*right > x else right
         
-@题解-二分
+@题解  
 class Solution:
     def mySqrt(self, x: int) -> int:
         l, r, ans = 0, x, -1
@@ -107,16 +107,16 @@ class Solution:
 
 leetcode-153
 #1.函数 2.排序 3.二分
-1-
+1
 class Solution:
     def findMin(self, nums: List[int]) -> int:
         return min(nums)
-2-
+2
 class Solution:
     def findMin(self, nums: List[int]) -> int:
         nums.sort()
         return nums[0]
-3-Binary Search #这一题有意思
+3-#Binary Search #这一题有意思
 class Solution:
     def findMin(self, nums: List[int]) -> int:
         left = 0 

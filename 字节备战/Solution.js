@@ -12,6 +12,7 @@
 // 数组转tree结构✅
 //函数add 接受任意数量的数字✅
 //驼峰改写✅
+// 快排✅
 
 
 // 改代码输出
@@ -235,7 +236,7 @@ let jsonStr1 = JSON.stringify(jsonObj)//json对象转化成json字符串
 
 //json对象转化成json数组对象
 let arr1=[];
-for(let i in jsonObj){
+for(let i in jsonObj){ //i是key，jsonObj[i]是value
     //var o={};
     //o[i]=jsonObj[i];
     arr1.push(jsonObj[i]);            

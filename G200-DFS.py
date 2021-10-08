@@ -31,7 +31,7 @@ class Solution:
         return 0 #这里如果不写，会导致helper返回的值为NoneType，从而引起error
 #点评：时间复杂度不太好，这里的helper也可以写成内置方法，或许会好些
 
-leetcode-200
+leetcode-200 岛屿数量
 class Solution:
     def numIslands(self, grid: List[List[int]]) -> int:   
         if not grid:

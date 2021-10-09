@@ -10,10 +10,13 @@
 // 深拷贝 ✅
 // ！！json数组转换✅
 // 数组转tree结构✅
-//函数add 接受任意数量的数字✅
-//驼峰改写✅
+// 函数add 接受任意数量的数字✅
+// 驼峰改写✅
 // 快排✅
-
+// ES5和ES6求数组最大值✅
+// 实现四则运算器✅
+// 实现矩形相交面积✅
+// 构建一个类✅
 
 // 改代码输出
 var obj = {
@@ -299,3 +302,128 @@ if( (typeof(j[i])=="number") && (!isNaN(j[i])) && (j[i]!=Infinity) ){
 getData(1,2,3,4,5,6);
 getData(1,2,'a');//3 
 
+
+//实现用promise的红绿灯
+function red() {
+  console.log("红色");
+}
+
+function green() {
+  console.log("绿色");
+}
+
+function yellow() {
+  console.log("黄色");
+}
+
+const light = function(timer, choice){
+  return new Promise(resolve => {
+    setTimeout(() => {
+      choice();
+      resolve();
+    }, timer);
+  });
+}
+
+const stepOn = function(){
+  Promise.resolve.then(() => {
+    return light(5000, green);
+  }).then(() => {
+    return light(1000, yellow);
+  }).then(() => {
+    return light(5000, red);
+  }).then(() => {
+    return stepOn();
+  })
+}
+
+stepOn();
+
+
+//实现矩形相交面积
+var rectA = {
+  left:-3, 
+  bottom:0, 
+  right:3, 
+  top:4
+}
+var rectB = {
+  left:0, 
+  bottom:-1, 
+  right:9, 
+  top:2
+}
+function getIntersectArea(rectA, rectB){
+  // 返回相交面积 或异常
+  var width = Math.min(rectA.right, rectB.right) - Math.max(rectA.left, rectB.left);
+  var height = Math.min(rectA.top, rectB.top) - Math.max(rectA.bottom, rectB.bottom);
+  if(width <= 0 || height <= 0){
+    throw new ArgumentException();
+  }else{
+    return width * height;
+    
+  }
+}
+console.log(getIntersectArea(rectA,rectB) )//true
+
+//看输出与改输出
+var fnArr = [];
+for (var i = 0; i < 10; i ++) {
+  fnArr[i] =  function(){
+    return i
+  };
+}
+console.log(fnArr[3]()) //10
+
+var fnArr = [];
+for (let i = 0; i < 10; i ++) { //var -> let
+  fnArr[i] =  function(){
+    return i
+  };
+}
+console.log(fnArr[3]()) //3
+
+
+
+//ES5和ES6求数组最大值
+//ES5 
+var max = Math.max.apply(this,[1,2,3])
+//ES6
+var max = Math.max(...[1,2,3])
+
+
+//实现四则运算器
+function account()
+{
+ 	var op1=prompt("请输入第一个数：","");
+	var op2=prompt("请输入第二个数：","");
+	var sign=prompt("请输入运算符号","")
+	var result;
+	opp1=parseFloat(op1);
+	opp2=parseFloat(op2);
+	switch(sign)
+	{
+		case "+":
+			result=opp1+opp2;
+			break;
+		case "-":
+			result=opp1-opp2;
+			break;
+		case "*":
+			result=opp1*opp2;
+			break;
+		default:
+			result=opp1/opp2;
+	}
+	alert("两数运算结果为："+op1+sign+op2+"="+result);
+}
+
+
+//构造一个类 - 利用到ES6里面的class
+// 命名类
+let Example = class Example {
+  constructor(a) {
+      this.a = a;
+  }
+}
+let exam1 = Example(); 

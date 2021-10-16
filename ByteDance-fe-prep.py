@@ -1,10 +1,10 @@
 # 树的右视图 199✅
 # 统计单词出现次数 剑指offer56-I -II 43 39✅
 # 二叉树反转180 226✅
-# 二叉树最小深度 111
-# 岛屿数量 200
-# 打家劫舍 337
-# 上台阶 746
+# 二叉树最小深度 111✅
+# 岛屿数量 200✅
+# 打家劫舍 337✅
+# 上台阶 746✅
 # 两数之和 1
 # 反转链表 206
 # 数组的子序列最大和 53 剑指offer
@@ -185,14 +185,118 @@ class Solution:
 
 
 # 二叉树最小深度 111
-#dfs
+#dfs 
+#这一题的take-away：可以利用if进行剪枝；不用声明新变量，直接将depth作为传参的值进行传递; 先递归把调用栈处理完毕，弹出的时候进行处理也行。
+class Solution:
+  def minDepth(self, root: TreeNode) -> int:
+    if not root:
+      return 0
 
-#bfs
+    left = self.minDepth(root.left)
+    right = self.minDepth(root.right)
 
+    if not root.left and not root.right:
+      return 1
+    elif not root.left or not root.right: 
+      return left + 1 if root.left else right+1
+    else: 
+      return min(left+1, right+1) + 1 #实际最终判断只有这里
+# 三种情况：1.如果没有子树，则返回depth=1就行；2.如果有一个子节点，那么root肯定是要返回有节点的，因为是判断子树要判断最深的，我们要的是min，这两个不一样的概念
+# 3.两个子节点都有的话，返回最小的那个，因此这一题肯定是从最底层处理，哪怕顶点没有节点，放在第一种情况里一起处理就好了。
+class Solution:
+    def minDepth(self, root: TreeNode) -> int:
+        if not root:
+            return 0
+        
+        if not root.left and not root.right:
+            return 1
+        
+        min_depth = 10**9 #这里就算很大，但是我们在下文中肯定是会处理的，因此不用担心，处理的序列在遇到上面的return时便返回了，不会再次初始化。
+        if root.left:
+            min_depth = min(self.minDepth(root.left), min_depth)
+        if root.right:
+            min_depth = min(self.minDepth(root.right), min_depth)
+        
+        return min_depth + 1
 
+#bfs  这一题注定用bfs会快
+class Solution:
+  def minDepth(self, root: TreeNode) -> int:
+    if not root:
+      return 0
+    
+    queue = [(root,1)]
+    while queue:
+      curNode, depth = queue.pop(0) #处理对象取值的用法，我第一次用
+      if not curNode.left and not curNode.right:
+        return depth
+      if curNode.left:
+        queue.append((curNode.left, depth+1))
+      if curNode.right:
+        queue.append((curNode.right, depth+1))
+    return 0
 
 
 # 岛屿数量 200
+class Solution:
+    def numIslands(self, grid: [[str]]) -> int:
+        def dfs(grid, i, j):
+            if not 0 <= i < len(grid) or not 0 <= j < len(grid[0]) or grid[i][j] == '0': return
+            grid[i][j] = '0'
+            dfs(grid, i + 1, j)
+            dfs(grid, i, j + 1)
+            dfs(grid, i - 1, j)
+            dfs(grid, i, j - 1)
+        count = 0
+        for i in range(len(grid)):
+            for j in range(len(grid[0])):
+                if grid[i][j] == '1':
+                    dfs(grid, i, j) #将相邻的1都变为0，同时实现剪枝的目的。
+                    count += 1
+        return count
+
+
+
+# 岛屿周长463
+#这一题的想法牛呀，利用边界穿越，去计算周长，因为图像的特殊性，不能用有几块岛屿去计算周长
+class Solution:
+    def islandPerimeter(self, grid: List[List[int]]) -> int:
+      for i in range(len(grid)):
+        for j in range(len(grid[0])):
+          if grid[i][j] == 1:
+            return self.dfs(grid, i, j)
+      return 0
+    
+    def dfs(self, grid, i, j):
+      if not 0<=i<len(grid) or not 0<=j<len(grid[0]) or grid[i][j] == 0:
+        return 1
+
+      if grid[i][j] != 1:
+        return 0
+
+      grid[i][j] = 2
+      return self.dfs(grid, i+1, j)+self.dfs(grid, i, j+1)+self.dfs(grid, i-1, j)+self.dfs(grid, i, j-1)
+
+
+
+# 岛屿的最大面积 695
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+      res = 0
+
+
+    def dfs(self,grid,x,y):
+      if grid[x][y] == 1 or 0<=x<len(grid) or 0<=y<len(grid[0]):
+        return 
+      grid[x][y] = 1
+      self.dfs(grid, x, y+1)
+      self.dfs(grid, x+1, y)
+      self.dfs(grid, x-1, y)
+      self.dfs(grid, x, y-1)
+      return res + 1
+
+
+# 最大人工到 827
 # 打家劫舍 337
 # 上台阶 746
 # 两数之和 1

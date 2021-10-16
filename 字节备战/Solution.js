@@ -581,3 +581,66 @@ function parseParam(rul){
 }
 
 
+//JSONP
+const jsonp = ({url, params, callbackName}) => {
+  const generateUrl = () => {
+    let dataSrc = '';
+    for(let key in params){
+      if(params.hasOwnProperty(key)) {
+        dataSrc += `${key} = ${params[key]}&`
+      }
+    }
+    dataSrc += `callback=${callbackName}`
+    return `${url}?${dataSrc}`
+  }
+  return new Promise((resolve, reject) => {
+    const scriptEle = document.createElement('script');
+    scriptEle.src = generateUrl();
+    document.body.appendChild(scriptEle);
+    window[callbackName] = data => {
+      resolve(data);
+      documen.remove(scriptEle);
+    }
+  })
+}
+
+//AJAX
+const getJSON = function(url){
+  return new Promise((resolve, reject) => {
+    const xhr = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Mscrofot.XMLHttp');
+    xhr.open('GET', url, false);
+    xhr.setRequestHeader('Accept','application/json');
+    xhr.onreadystatechange = function(){
+      if (xhr.readyState !== 4 ) return;
+      if (xhr.status === 200 || xhr.status === 304) {
+        resolve(xhr.responseText);
+      }else{
+        reject(new Error(xhr.responseText));
+      }
+    }
+    xhr.send();
+  })
+}
+
+
+// https://juejin.cn/post/6946022649768181774#heading-41
+//foreach
+//map
+//filter
+//some
+//reduce
+//call
+//apply
+//bind
+//new关键字
+//instanceof 关键字
+//object.create
+//object.assign
+//json.stringify
+//json.parse eval / newfunction
+//promise.resolve
+//promise.reject
+//promise.all
+//promise.race
+//promise.allsettled
+//promise.any

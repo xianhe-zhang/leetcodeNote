@@ -12,6 +12,9 @@
 
 #树的右视图 leetcode-199
 #BFS
+from typing import List
+
+
 class Solution:
     def rightSideView(self, root: TreeNode) -> List[int]:
       res = []
@@ -239,7 +242,7 @@ class Solution:
 
 # 岛屿数量 200
 class Solution:
-    def numIslands(self, grid: [[str]]) -> int:
+    def numIslands(self, grid: str) -> int:
         def dfs(grid, i, j):
             if not 0 <= i < len(grid) or not 0 <= j < len(grid[0]) or grid[i][j] == '0': return
             grid[i][j] = '0'
@@ -296,12 +299,213 @@ class Solution:
       return res + 1
 
 
-# 最大人工到 827
-# 打家劫舍 337
-# 上台阶 746
-# 两数之和 1
-# 反转链表 206
-# 数组的子序列最大和 53 剑指offer
-# 数组的topk大数字  剑指offerII 076
 
-今天刷完这些题，明天才能更美妙！
+# 打家劫舍 337
+#简单DFS思路
+class Solution:
+    def rob(self, root: TreeNode) -> int:
+      if not root:
+        return 0 
+      
+      money = root.val
+      if root.left:
+        money += self.rob(root.left.left) + self.rob(root.left.right)
+      if root.right:
+        money += self.rob(root.right.left) + self.rob(root.right.right)
+
+      return max(money, self.rob(root.left)+self.rob(root.right))
+
+#记忆话搜索，利用备忘录，这里用的是dict/hashmap   //超市
+class Solution:
+    def rob(self, root: TreeNode) -> int:
+      memo = {}
+      def robHelper(root: TreeNode, memo:dict):
+        if not root:
+          return 0
+        if root in memo: return memo.get(root)  #dict的用法，has_key和_contains_不太好用了。
+        money = root.val
+        if root.left:
+          money += self.rob(root.left.left) + self.rob(root.left.right)
+        if root.right:
+          money += self.rob(root.right.left) + self.rob(root.right.right)
+        res = max(money, self.rob(root.left)+self.rob(root.right))
+        memo[root] = res
+        return res
+      return robHelper(root, memo)
+
+
+#DP ,出发点就是看偷或者不偷，递归的顺序就是树的遍历顺序。
+class Solution:
+  def rob(self, root: TreeNode) -> int:
+    return max(self.robHelper(root))
+  
+  def robHelper(self, root):
+    if not root:
+      return 0, 0
+
+    left =  self.robHelper(root.left)
+    right = self.robHelper(root.right)
+    unselect = max(left[0],left[1]) + max(right[0] ,right[1])
+    select = left[0] + right[0] + root.val
+    return  unselect, select
+
+
+class Solution:
+    def rob(self, root: TreeNode) -> int:
+        def dfs(node):
+            if not node: return 0, 0
+            l = dfs(node.left)
+            r = dfs(node.right)
+            selected = node.val + l[1] + r[1]
+            notSelected = max(l[0], l[1]) + max(r[0], r[1])
+            return selected, notSelected
+        return max(dfs(root))
+
+# 上台阶 746
+class Solution:
+    def minCostClimbingStairs(self, cost: List[int]) -> int:
+      if len(cost) < 3: return min(cost[0],cost[1])
+      minCost0, minCost1 = 0, min(cost[0], cost[1])
+      for i in range(2, len(cost)):
+        minCost = min(minCost0 + cost[i - 1], minCost1 + cost[i])
+        minCost0, minCost1 = minCost1, minCost
+
+      return minCost
+  
+# class Solution {
+#     public int minCostClimbingStairs(int[] cost) {
+#         int minCost0 = 0;
+#         int minCost1 = Math.min(cost[0], cost[1]);
+#         int minCost = 0;
+#         for (int i = 2; i < cost.length; i++) {
+#             minCost = Math.min(minCost1 + cost[i], minCost0 + cost[i - 1]);
+#             minCost0 = minCost1;
+#             minCost1 = minCost;
+#         }
+#         return minCost;
+#     }
+# };
+
+
+#除了原地转换，也新增原链条处理方式。
+class Solution:
+  def minCostClimbingStairs(self, cost: List[int]) -> int:
+    for i in range(2, len(cost)):
+      cost[i] = min(cost[i - 2], cost[i - 1]) + cost[i]
+      return min(cost[-1], cost[-2])
+#这个处理方式就是台阶就像是过路费...
+
+
+
+
+# 两数之和 1
+#暴力解
+class Solution:
+  def twoSum(self, nums: List[int], target: int) -> List[int]:
+    for i in range(len(nums)):
+      for j in range(i + 1, len(nums)):
+        if nums[i] + nums[j] == target:
+          return [i, j]
+    return []
+
+#哈希表  #把target当作key值，真正的index放入到value中去，哇哦～
+class Solution:
+  def twoSum(self, nums: List[int], target: int) -> List[int]:
+    hashTable = dict()
+    for i, num in enumerate(nums):
+      if (target - num) in hashTable:
+        return [i, hashTable[target - num]]
+      hashTable[num] = i
+    return []
+
+
+# 反转链表 206
+# 双指针
+class Solution(object):
+  def reverseList(self, head):
+    pre = None
+    cur = head
+
+    while cur:
+      temp = cur.next
+      cur.next = pre
+      pre = cur
+      cur = temp
+
+    return pre
+
+# 递归
+class Solution(object):
+  def reverseList(self, head):
+    if not head or not head.next:
+      return head
+    cur = self.reverseList(head.next)   #遍历到最后一个head停下，此时cur->last node
+    head.next.next = head               #head.next的next指针指向head自己，把自己想成node，你拍了拍排队在你前面的小明同学，让他转身面向你。
+    head.next = None                    #ok，用完小明通道后，我把自己的指针通道关闭了/指向None
+    return cur                          #最终整条链条改造完毕。
+
+
+# 最大子序和53 
+# 这一题的关键点在于子问题的剥离，如果目前的子序列大于0，那么我们在遍历到cur的时候完全可以加上，不用管前面一位是否为正负；但是如果是负的话，前面都要舍弃掉。
+# 那么前面究竟值得是？这个时候不想往前想，就着眼于当前这个节点。之前想的话，会有很多状体，无法控制。但是着眼于当前这个节点的代码我们是可以写的！
+class Solution:
+  def maxSubArray(self, nums: List[int]) -> int:
+    size = len(nums)
+    if size == 0: return 0
+    pre = 0                         #pre是用来处理当前子序列和； res是用来储存各个子序列和中最大的一项。
+    res = nums[0]
+    for i in range(size):
+      pre = max(nums[i], nums[i] + pre)         #pre简单理解就是nums的叠加！但是由于max的机制，刚好起了一个filter的作用
+      res = max(pre, res)
+    return res
+
+
+
+# 数组的topk大数字 215
+#JDK默认的是快排
+#暴力用sort
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        size = len(nums)
+        nums.sort()
+        return nums[size - k]
+
+
+
+#优先队列/堆
+import heapq #标准库，不用也行。
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+      heap = []
+      for num in nums:
+        heapq.heappush(heap, num)
+        if len(heap) > k:
+          heapq.heappop(heap)         #heappop弹出最小值；如果只访问不修改的话，直接heap[0]就行了。
+      return heapq.heappop(heap)
+#通过最小堆heapq限制堆中数据，保证在堆内的永远是最小的一批数字。
+""" 
+heappush(heap,item)     #将item加入到堆中
+heap[0]                 #访问最小值
+heappop(heap)           #弹出最小值
+heappushpop(heap,item)  #插入后弹出       == heapreplace(heap, item)
+heapify(list)           #将list转化为堆  
+merge()
+nlargest()
+nsmallest()
+"""
+
+# class Solution {
+#     public int findKthLargest(int[] nums, int k) {
+#         PriorityQueue<Integer> heap = new PriorityQueue<>();
+#         for (int num : nums) {
+#             heap.add(num);
+#             if (heap.size() > k) {
+#                 heap.poll();
+#             }
+#         }
+#         return heap.peek();
+#     }
+# }
+
+
+#

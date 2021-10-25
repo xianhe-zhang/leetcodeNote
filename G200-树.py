@@ -332,8 +332,121 @@ class Solution:
 #与java的区别在于，主要是数据结构的选择，与API的CURD差别，其他基本上一致。
 
 
-# 111
-# 404
-# 687
-# 337
-# 671
+# 111 二叉树的最小深度
+#BFS
+class Solution:
+  def minDepth(self, root: TreeNode) -> int:
+    if not root:
+      return 0
+
+    queue = [(root, 1)]
+    while queue:
+      node, depth = queue.pop(0)
+      if not node.left and not node.right:
+        return depth
+      if node.left:
+        queue.append((node.left,depth + 1))
+      if node.right:
+        queue.append((node.right,depth + 1))
+    return 0
+
+#DFS
+#这里要传参进去，所以需要helper
+#这一题不用helper！而且难点在于如何简单化写条件判断，决定返回哪个子树的depth
+#条件判断：如果都为空可以返回；如果有一方不为空，返回有值的；如果都不为空，返回min
+#写在一个method中时，需要depth当参数
+class Solution:
+  def minDepth(self, root: TreeNode) -> int:
+    if not root:
+      return 0
+    left = self.minDepth(root.left)
+    right = self.minDepth(root.right)
+    if root.left and root.right:          #注意这里的顺序很重要！
+      return min(left, right) + 1
+    else:
+      return left + right + 1 
+    
+# 404 左叶子之和  
+# 判断逻辑：每个子树最底层的左侧叶子
+# 如果我们在递归中利用判断储存数据，那么可以在return的对象中添加判断遍历哪个子树的逻辑。
+class Solution:
+  def sumOfLeftLeaves(self, root: TreeNode) -> int:
+    if root is None:            #碰到头都是0，因为没用
+      return 0
+    if root.left and not root.left.right and not root.left.left:       #如果发现又满足合适的子叶，返回，并且从这个node开始专注于右子树
+      return self.sumOfLeftLeaves(root.right) + root.left.val
+    else: 
+      return self.sumOfLeftLeaves(root.right) + self.sumOfLeftLeaves(root.left)   #如果没有发现合适的继续遍历
+
+# 687 最长同值路径
+# 这一题我最开的是想法是：遍历每一个node，把node都当作root，然后看可以延伸出来多少种情况，最终用全局变量做动态储存。但是这样重复的计算量太大了。至少是n2了
+# 难度在于：因为遍历的顺序，如何更新我们的全局变量？
+# solution给到的思路是：跟我的类似，每一层递归都是在判断当前节点；
+#我犯了错误：递归的时候只用判断当前层的逻辑就行了，不要考虑下一层；如果val相同的话，我们连接起来，可以求得left+right的最大值，那么上一层也是这种逻辑，直接在一层递归中判断就可以了。
+# see the code
+class Solution:
+  def longestUnivaluePath(self, root: TreeNode) -> int:
+    def findLen(root): #findLen返回的是当前Node值相同的最长子树的Node数量；不可能一个method有多个作用。但是我们可以联合全局变量实现多重功效
+      if not root:
+        return 0
+      left = findLen(root.left)
+      right = findLen(root.right)
+      left_value, right_value = 0, 0
+      if root.left and root.val == root.left.val:
+        left_value = left + 1
+      if root.right and root.val == root.right.val:
+        right_value = right + 1  
+      self.ans = max(self.ans, left_value + right_value) #计算的是路径，所以这里不用再+1，计算出子树的节点就可以了。
+      return max(left_value, right_value)
+      
+    self.ans = 0
+    findLen(root)
+    return self.ans
+#通过递归里面的判断，将两层递归/递归之间联系起来。 比如这一题，如果满足条件，那么这一层递归就比下一层递归+1；
+#再通过左右子树的递归将满足题意的值通过global传递出去。
+
+
+
+# 337 打家劫舍 III
+# 关键点在于是否选择当前节点。
+class Solution:
+  def rob(self, root: TreeNode) -> int:
+    def dfs(root):
+      if not root:
+        return 0, 0 #严格符合规矩，return两个值
+      
+      left = dfs(root.left)      #在判断前进入递归，满足从下往上走，最终确定return跟节点，满足此题。
+      right = dfs(root.right) 
+      select = left[1] + right[1] + root.val
+      unselect = max(left) + max(right)     #如果不选的话，那么left,right选不选的情况都要考虑。
+      return select, unselect 
+    return max(dfs(root))
+
+
+
+# 671 二叉树中第二小的节点
+#基本思想：因为根节点肯定为最小值，那么把根节点带入到所有递归中去，将与根节点.val不同的所有节点带入判断中去找到最小值，这个最小值就是我们要找的值，否则return -1；
+#tip: 因为return的default是-1，因此可以一开始直接将-1赋值给我们的变量
+#dfs
+class Solution:
+  def findSecondMinimumValue(self, root: TreeNode) -> int:
+    self.ans = -1
+    self.dfs(root, root.val)
+    return self.ans
+    
+  def dfs(self, root: TreeNode, target) -> int:
+    if not root:
+      return 
+    
+    if root.val != target:
+      if self.ans == -1:
+        self.ans = root.val  
+      else:
+        self.ans = min(root.val, self.ans)    
+
+    self.dfs(root.left, target)
+    self.dfs(root.right, target)
+#这个ans怎么优化？好像没办法优化，即使是在全局进行生命的，在各个method中调用仍然需要使用self
+#时间复杂度为On，空间复杂度常数，一般为递归的层数
+
+

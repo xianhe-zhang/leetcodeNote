@@ -450,3 +450,182 @@ class Solution:
 #时间复杂度为On，空间复杂度常数，一般为递归的层数
 
 
+#637  二叉树的层平均值
+class Solution:
+  def averageOfLevels(self, root: Optional[TreeNode]) -> List[float]:
+    if not root:
+      return 0 
+    
+    queue = collection.deque([root])
+    while queue:
+      total = 0
+      size = len(queue)
+      for _ in range(size):
+        node = queue.popleft()
+        total += node.val
+        left = node.left
+        right = node.right
+        if left: 
+          queue.append(left)
+        if right:
+          queue.append(right)
+      res = total / size
+    return res
+    #展开用cmd+k,cmd+L
+#这一题的有趣点在想到用for和size去帮助解题。
+
+
+#513 找树左下角的值
+class Solution:
+    def findBottomLeftValue(self, root: TreeNode) -> int:
+      res = root.val
+      queue = [root]
+      while queue:
+        size = len(queue)
+        for _ in range(size):   #要想针对同一层进行什么操作，这里就适合用for循环
+          if _ == 0:            #很巧妙地用index去看这一层取到的特殊的值
+            res = queue[_].val  
+          node = queue.pop(0)
+          if node.left:
+            queue.append(node.left)        
+          if node.right:
+            queue.append(node.right)
+      return res
+
+#144 二叉树的前序遍历
+class Solution:
+  def preorderTraversal(self, root: TreeNode) -> List[int]:
+    def preOrder(root):
+      if not root:
+        return
+      res.append(root.val)
+      preOrder(root.left)
+      preOrder(root.right)
+    res = list()
+    preOrder(root)
+    return res 
+
+# #中序遍历
+# order(node.left)
+# res.append(node.val)
+# order(node.right)
+
+#后序遍历
+# order(node.left)
+# order(node.right)
+# res.append(node.val)
+
+#我们append放置的地点决定了，我们的该项操作是在何时执行的，是在递归前进行还是递归后进行。
+
+#迭代
+class Solution:
+  def preorderTraversal(self, root: TreeNode) -> List[int]:
+    if not root:
+      return []
+    
+    res = list()
+    stack = list()
+    stack.append(root)
+
+    while stack:
+      node = stack.pop()
+      res.append(node.val)
+      if node.right:
+        stack.append(node.right)
+      if node.left:
+        stack.append(node.left)
+
+    return res         
+#这里注意的是右子树先入栈，左子树再入栈
+#因为这里有LIFO的特征，所以可以利用这种BFS的模式去模仿DFS的出入栈。
+
+#中序遍历
+class Solution:
+  def preorderTraversal(self, root: TreeNode) -> List[int]:
+    if not root:
+      return []
+    
+    res = list()
+    stack = list()
+    node = root
+
+    while stack or node:                  #java中判断某个数据是否为空用的是null; 判断某个数据集合是否为空用的是isEmpty()
+      #将left都入栈！
+      while node:
+        stack.append(node)
+        node = node.left
+    
+      node = stack.pop()
+      res.append(node.val)
+      if node.right:
+        stack.append(node.right)      
+    return res     
+
+#后续遍历
+class Solution:
+  def preorderTraversal(self, root: TreeNode) -> List[int]:
+    if not root:
+      return []
+    
+    res = list()
+    stack1 = list(root)
+    stack2 = list()
+    while stack1:
+      node = stack1.pop()
+      stack2.append(node)
+      if node.left:
+        stack1.append(node.left)      
+      if node.right:
+        stack1.append(node.right)
+    while stack2:
+      res.append(stack2.pop().val)
+    return res
+#后序遍历的核心思路就是利用两个栈，将前序遍历入栈顺序，再次弹栈入栈
+
+
+#颜色标记法 - 中序遍历
+class Solution:
+    def inorderTraversal(self, root: TreeNode) -> List[int]:
+        WHITE, GRAY = 0, 1
+        res = []
+        stack = [(WHITE, root)]
+        while stack:
+            color, node = stack.pop()
+            if node is None: continue
+            if color == WHITE:
+                stack.append((WHITE, node.right))
+                stack.append((GRAY, node))
+                stack.append((WHITE, node.left))
+            else:
+                res.append(node.val)
+        return res
+# 使用颜色标记节点的状态，新节点为白色，已访问的节点为灰色。
+# 如果遇到的节点为白色，则将其标记为灰色，然后将其右子节点、自身、左子节点依次入栈。
+# 如果遇到的节点为灰色，则将节点的值输出。
+
+
+#莫里斯Morris遍历
+# 用递归和迭代的方式都使用了辅助的空间，而莫里斯遍历的优点是没有使用任何辅助空间。
+# 缺点是改变了整个树的结构，强行把一棵二叉树改成一段链表结构。
+class Solution(object):
+	def inorderTraversal(self, root):
+		res = []
+		pre = None
+		while root:
+			# 如果左节点不为空，就将当前节点连带右子树全部挂到
+			# 左节点的最右子树下面
+			if root.left:
+				pre = root.left
+				while pre.right:
+					pre = pre.right
+				pre.right = root   #此时pre是左子树的最右侧子树，将right指向我们的根节点root
+				# 将root指向root的left
+				tmp = root           #将root挂到tmp上
+				root = root.left     #root替换成root.left
+				tmp.left = None      #删除原来的链条 完成转移。
+			# 左子树为空，则打印这个节点，并向右边遍历	
+			else: #只要左子树存在更复杂的结构，会重复上述，直到简单变为链式。然后在下面依次append进去，就是我们的中序遍历
+				res.append(root.val)
+				root = root.right
+		return res
+#有点难理解。

@@ -415,6 +415,129 @@ class Solution:
 
 
 
-#208
+#208 实现前缀树
+# 字典实现
+class Trie(object):
+  def __init__(self):
+    """
+    Initialize your data structure here.
+    """
+    self.root = TrieNode()
 
-#677 
+  def insert(self, word):
+    """
+    Inserts a word into the trie.
+    :type word: str
+    :rtype: None
+    """
+    node = self.root
+    for c in word:
+      if c not in node.children:
+        node.children[c] = TrieNode()
+      node = node.children[c]
+    node.is_word = True
+
+  def search_prefix(self, word):
+    node = self.root
+    for c in word:
+      if c not in node.children:
+        return None
+      node = node.children[c]
+    return node
+
+  def search(self, word):
+    """
+    Returns if the word is in the trie.
+    :type word: str
+    :rtype: bool
+    """
+    node = self.search_prefix(word)
+    return node is not None and node.is_word
+
+  def startsWith(self, prefix):
+    """
+    Returns if there is any word in the trie that starts with the given prefix.
+    :type prefix: str
+    :rtype: bool
+    """
+    return self.search_prefix(prefix) is not None
+
+
+class TrieNode(object):
+  def __init__(self):
+    self.children = {}
+    self.is_word = False
+
+
+
+#✨java中的charAr() VS python中的 ord
+
+
+"""
+class Trie {
+    class TrieNode {
+        boolean end;
+        TrieNode[] tns = new TrieNode[26];
+    }
+
+    TrieNode root;
+    public Trie() {
+        root = new TrieNode();
+    }
+
+    public void insert(String s) {
+        TrieNode p = root;
+        for(int i = 0; i < s.length(); i++) {
+            int u = s.charAt(i) - 'a';
+            if (p.tns[u] == null) p.tns[u] = new TrieNode();
+            p = p.tns[u]; 
+        }
+        p.end = true;
+    }
+
+    public boolean search(String s) {
+        TrieNode p = root;
+        for(int i = 0; i < s.length(); i++) {
+            int u = s.charAt(i) - 'a';
+            if (p.tns[u] == null) return false;
+            p = p.tns[u]; 
+        }
+        return p.end;
+    }
+
+    public boolean startsWith(String s) {
+        TrieNode p = root;
+        for(int i = 0; i < s.length(); i++) {
+            int u = s.charAt(i) - 'a';
+            if (p.tns[u] == null) return false;
+            p = p.tns[u]; 
+        }
+        return true;
+    }
+}
+
+"""
+
+
+#677  优美的排列 II
+class Solution:
+  def constructArray(self, n: int, k: int) -> List[int]:
+    res= [0 for _ in range(n)]
+
+    for i in range(n - k - 1):
+      res[i] = i + 1
+    
+    j = 0
+    left = n - k
+    right = n
+    for i in range(n - k - 1, n):
+      if j % 2 == 0:
+        res[i] = left
+        left += 1
+      else:
+        res[i] = right
+        right -= 1
+      j += 1
+    return res
+#这一题的精髓在于思路：一个序列可以分为两部分，其中一部分等差一致，另一部分等差不一致，然后我们就可以随意的控制等差的数量了       
+

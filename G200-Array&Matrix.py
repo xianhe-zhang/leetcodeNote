@@ -579,7 +579,7 @@ class Solution:
     def findShortestSubArray(self, nums: List[int]) -> int:
         left, right = dict(), dict()
         res = len(nums)
-        counter = collections.Counter(nums)
+        counter = collections.Counter(nums) 
         for i, num in enumerate(nums):
             if num not in left:
                 left[num] = i
@@ -592,6 +592,14 @@ class Solution:
         return res
 # 时间复杂度为n，因为要遍历所有元素
 # 空间复杂度为n，因为最差情况下，要为每一个num都要新建
+"""
+API: 
+collections.Counter()
+enumerate()
+.values()
+.keys()
+.items()
+"""
 
 
 
@@ -608,21 +616,40 @@ class Solution:
 #复杂度为n，空间为1，毕竟没有new
 
 # 565 Array Nesting 数组嵌套 #permutation 排列/组合/置换
-# 理解题意最重要
+# 理解题意最重要，这一题是看每一个element可以组成的list，而非只有从头开始。并且从题意当中可以得知，最终一定是个环！每一个elemet都是某个环的一部分。
+# 搞清楚这一题的数据结构后，就很简单啦！这一题的众多element都会组成自己的环，找出最长的那个环就行了。
 class Solution:
     def arrayNesting(self, nums: List[int]) -> int:
         res = 0 
         for i in range(len(nums)):
+            # 如果==-1，意味着我们已经遍历过该ele，那么就不用再遍历这个了。
             if nums[i] == -1:
                 continue
+
             temp = 1
             path_i = i
+            
+            # 我们下一个将要遍历的index 不等于我们的开头进来的index
             while nums[path_i] != i:
+                # 遍历过的元素更新，然后更新path_i
                 nums[path_i], path_i = -1, nums[path_i]
+                # 满足题意之后temp + 1
                 temp += 1
             nums[path_i] = -1
+            # 因为所有element都有自己属于自己的环，因此只用遍历一次，而且只用取temp的最大值就可以了！
             res = max(temp, res)
         return res
- 
+# 弄清楚你在打交道的数据结构很重要。这一题也可以通过维护一个visit[]判断是否已经遍历过
 
-# 769
+# 769 Max chunks to make sorted
+# 暴力解法、复杂度为n
+# 这一题就是找规律，如果最后的一位数是已经遍历过的最大数，就可以split，然后ans+1.
+class Solution:
+    def maxChunksToSorted(self, arr: List[int]) -> int:
+        ma = ans = 0
+        for i, num in enumerate(arr):
+            ma = max(ma, num)
+            if ma == i: ans += 1
+        return ans
+
+

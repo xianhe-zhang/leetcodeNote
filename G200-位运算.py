@@ -129,12 +129,56 @@ class Solution:
 
 
 
-# 190
-# 231
+# 190 Reverse bits
+# 题目中给到的是 a given 32 bits unsigned integer.
+# Thought here: 每次把 res 左移，把 n 的二进制末尾数字，拼接到结果 res 的末尾。然后把 n 右移。
+class Solution:
+    def reverseBits(self, n):
+        res = 0
+        # traverse 32 次
+        for i in range(32): 
+            # res向左移动，将末位空出0来。
+            # n & 1 位与运算会获得末位是0还是1；
+            # 将上面的0/1放在res末位，通过位或运算
+            res = (res << 1) | (n & 1)
+            # 将n往右移动1位。
+            n >>= 1
+        return res
+
+# 231 2的幂
+class Solution:
+    def isPowerOfTwo(self, n: int) -> bool:
+        return n > 0 and n & (n - 1) == 0
+# 下面来解释一下为什么满足这两个条件，就一定为2的幂
+# 因为是2进制，所以n为2的幂，那么 n 二进制最高位为 1，其余所有位为 0
+# 同理，n - 1 的二进制最高位为0，其余所有位为1。
+# 根据题意知道n肯定大于0，才能满足。
 
 
+# 342 4的幂
+# 可以转化成2的幂solve，也可以用模版solve
+class Solution:
+    def isPowerOfFour(self, n: int) -> bool:
+        if n <= 0: return False
+        # 这里做int转化为舍弃掉小数部分。
+        x = int(math.sqrt(n))
+        return x * x == n and (x & -x) == x
+# 这个x&-x与上文的n&n-1效果一样
 
-# 342
+
+class Solution:
+    def isPowerOfFour(self, n: int) -> bool:
+        if n<=0:return False
+        if n==1:return True
+        while n>1:
+            if n%4==0:
+                n=n/4
+            else:
+                return False
+                break
+        return True
+
+
 # 693
 # 476
 # 371

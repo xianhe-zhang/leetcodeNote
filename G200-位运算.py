@@ -179,8 +179,110 @@ class Solution:
         return True
 
 
-# 693
-# 476
-# 371
-# 318
-# 338
+# 693 Binary Number with Alternating Bits
+class Solution:
+    def hasAlternatingBits(self, n: int) -> bool:
+        while n:
+            # x用来判断最后一位是0是1
+            x = n & 1 
+            n>>=1
+            # y是倒数第二位是0是1
+            y = n & 1
+            # 如果xy相同，意味着n位和n-1位相同。
+            if x==y:
+                return False
+        # 遍历完就可以结束
+        return True
+
+class Solution:
+    def hasAlternatingBits(self, n: int) -> bool:
+        while n:
+            prenum = (n//2) & 1   # n//2获得的是除去最后一位，不论
+            nownum = n%2          # n % 2相当于二进制右移一位
+            if prenum == nownum:
+                return False
+            n>>=1
+        return True
+
+
+
+# 476 Number Complement 补数
+# 因为计算机里存储的是以32位形式，所以我们不能将所有的0都一口气用～取反成为1
+class Solution:
+    def findComplement(self, num: int) -> int:
+        highbit = 0
+        # 查询1～30位，找到最高位位1的地方
+        for i in range(1, 30 + 1):
+            # 1向左移动i位，就可以表示第i位就是1所在的地方
+            if num >= (1 << i):
+                highbit = i
+            else:
+                break
+        
+        # mask为掩码的运算 mask就是从highbit到0位都是1
+        mask = (1 << (highbit + 1)) - 1 
+        
+        # 这个结果就是num的反码：异或运算
+        return num ^ mask
+# 巧妙！
+
+# 371 sum of two integers
+class Solution:
+    def getSum(self, a: int, b: int) -> int:
+        return sum([a,b])
+# 318 Maximum product of word lengths
+"""
+class solution{
+    public int maxProduct(String[] words) {
+        int n = words.length();
+        int[] nums = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            // 将所有的word转化为我们想要的二进制数字
+            // 重点：那么这个convert出来的究竟是什么？
+            //      通过位与运算，将每个字母映射的数字嵌入到ans里面，好神奇！
+            nums[i] = convert(words[i]);
+        }
+        int ans = 0;
+        // 典型的双for loop traverse
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                // 因为是位与运算，如果=0，意味着所有位都不相同，即不存在相同的字母
+                // 理解nums究竟是什么需要理解convert这个方法return的是什么内容。
+                if (nums[i] & nums[j] == 0) { 
+                    ans = Math.max(ans, words[i].length() 
+                    * words[j].length());
+                }
+            }
+        }
+    }
+    private int convert(String word) {
+        int ans = 0;
+        for (int i = 0; i < word.length(); i++) {
+            // 这一步骤很关键，word.charAt(i) - 'a'是为了让每个字母与integer联系起来
+            // 然后利用位或得到ans，ans就是表示word代表的一个数。
+            ans |= 1 << (word.charAt(i) - 'a');
+        }
+        return ans;
+    }
+}
+     
+时间复杂度: O(n * m + n^2)O(n * m+n2)，n 为单词数量，m 为单词平均长度。
+空间复杂度: O(n)O(n)。
+"""
+
+# 338 Counting Bits
+"""
+class Solution {
+    public int[] countBits(int num) {
+        int[] result = new int[num + 1];
+        for(int i = 1; i <= num; i++){
+                // result[i >> 1] : 相当于i//2；这是因为二进制中，一个偶数有1的个数与它的二分之一相同，只是这个1的位不同罢了。
+                // i & 1: 位与运算，如果是奇数那么结果为1，否则为0；
+                // 综上所属，result[i]，我们可以兼顾到奇数和偶数。
+                result[i] = result[i >> 1] + (i & 1);
+        }
+        return result;
+    }
+}
+"""

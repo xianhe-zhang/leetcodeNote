@@ -273,3 +273,143 @@ class Solution:
             else:c -= 1
         # 如果没有找到，那么过了临界点我理解的是删除根据格子的值，去不断改变r/c直到边界，最终跳出while，返回false
         return False
+
+
+# 剑指 Offer 11. 旋转数组的最小数字
+# 这题再学while的判断
+# 我自己的答案，没办法跑通所有case
+class Solution:
+    def minArray(self, numbers: List[int]) -> int:
+        i, j = 0, len(numbers) - 1
+        while i <= j:
+            m = (i + j) // 2
+            if numbers[m] < numbers[j]:     j = m - 1
+            elif numbers[m] > numbers[j]:   i = m + 1
+            else: j -= 1
+        return numbers[i]
+
+#正确答案        
+class Solution:
+    def minArray(self, numbers: [int]) -> int:
+        i, j = 0, len(numbers) - 1
+        while i < j:
+            m = (i + j) // 2
+            if numbers[m] > numbers[j]: i = m + 1
+            elif numbers[m] < numbers[j]: j = m
+            else: j -= 1
+        return numbers[i]
+"""
+如何考虑while是 >= 还是 > 呢？
+1. i > j 有三层意思：1. 跳出while意味着i~j区间为空，找不到； 2.i == j 左右边界相碰了； 3. i == j这个点没有意义
+2. i >= j, 最终跳出结果是j = i - 1; 
+
+我们缩小区间时，是不想把我们的target跳过的，因此，要结合while和if去看我们的if里面的逻辑
+"""
+#注意如果你使用i<=j时，其实相当于最后一次判断了i==j的情况。而我们的if判断条件i与j要发生变化，
+# 比如i=m+1 m肯定不在区间里；j=m-1为啥？因为j也不在区间里
+
+# 如果使用<，那么意味着i==j的时候有意义，我们需要进行逻辑判断；所以不能i=m+1/j=m-1同时存在，因为这样意味着m这个点的值没有意义。
+# 如果用<=, 为什么可以用m+1,m-1，因为我们会进行多一次的判断在结尾处，所以不要紧！
+# 但是注意有个坑，如果利用<=，最好是没有相同元素且有序的情况下，因为如果i从头到尾都没有变过，那么我们的动态逻辑就会导致j变成 -1，很可能不符合我们的预期。
+
+
+
+# 剑指 Offer 50. 第一个只出现一次的字符
+class Solution:
+    def firstUniqChar(self, s: str) -> str:
+        dic = {}
+        for c in s:
+            # 这个很好，not c in dic
+            # 如果没有遍历过c，就是第一次添加，添加的value为true；
+            # 如果已经遍历过c，那么之后无论第几次添加，value都为false
+            dic[c] = not c in dic 
+        for c in s:
+            if dic[c]: return c
+        return ' '
+# 本题就是先遍历确定哪些只出现过一次，然后一次遍历得到答案
+
+# 剑指 Offer 32 - I. 从上到下打印二叉树
+# 这题就是BFS
+class Solution:
+    def levelOrder(self, root: TreeNode) -> List[int]:
+        res = []
+        if not root: return res
+        q = [root]
+        while q:
+            cur = q.pop(0)
+            res.append(cur.val)
+            if cur.left: q.append(cur.left)
+            if cur.right: q.append(cur.right)
+        return res 
+
+# 剑指 Offer 32 - II. 从上到下打印二叉树 II
+class Solution:
+    def levelOrder(self, root: TreeNode) -> List[List[int]]:
+        if not root: return []
+        res, queue = [], collections.deque()
+        queue.append(root)
+        while queue:
+            tmp = []
+            for _ in range(len(queue)):
+                node = queue.popleft()
+                tmp.append(node.val)
+                if node.left: queue.append(node.left)
+                if node.right: queue.append(node.right)
+            res.append(tmp)
+        return res
+# 这一道题就是吧每一层封装成一个list，最终再塞入一个list；比如[[1], [2,3], [4,5,6]]
+
+
+class Solution:
+    def levelOrder(self, root: TreeNode) -> List[List[int]]:
+        if not root: return []
+        res, queue = [], collections.deque([root])
+        while queue:
+            tmp = collections.deque()
+            for _ in range(len(queue)):
+                node = queue.popleft()
+                if len(res) % 2: tmp.appendleft(node.val)       # 关键！通过判断已有的res长度，去判断自己处于tree的奇数层还是偶数层
+                else: tmp.append(node.val)                      # 这一题很有趣的还有个如果%2 == 0，那么可以判断为False！ what amazing！
+                if node.left: queue.append(node.left)
+                if node.right: queue.append(node.right)
+            res.append(list(tmp))
+        return res
+
+# class Solution {
+#     public List<List<Integer>> levelOrder(TreeNode root) {
+#         Queue<TreeNode> queue = new LinkedList<>();
+#         List<List<Integer>> res = new ArrayList<>();
+#         if(root != null) queue.add(root);
+#         while(!queue.isEmpty()) {
+#             LinkedList<Integer> tmp = new LinkedList<>();
+#             for(int i = queue.size(); i > 0; i--) {
+#                 TreeNode node = queue.poll();
+#                 if(res.size() % 2 == 0) tmp.addLast(node.val); // 偶数层 -> 队列头部
+#                 else tmp.addFirst(node.val); // 奇数层 -> 队列尾部
+#                 if(node.left != null) queue.add(node.left);
+#                 if(node.right != null) queue.add(node.right);
+#             }
+#             res.add(tmp);
+#         }
+#         return res;
+#     }
+# }
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) { 
+        Queue<TreeNode> queue = new LinkedList<>();
+        List<List<Integer>> res = new ArrayList<>();
+        if(root != null) queue.add(root);
+        while (!queue.isEmpty()) {
+            LinkedList<Integer> tmp = new LinkedList<>();
+            for (int i = queue.size(); i > 0; i--) {
+                TreeNode node = queue.poll();  //使用poll()方法获取并删除Queue中的第一个元素。
+                if (res.size() % 2 == 0) tmp.addLast(noe.val);
+                else tmp.addFirst(node.val); 
+                if(node.left != null) queue.add(node.left);
+                if(node.right != null) queue.add(node.right);
+            }
+            res.add(tmp);
+        }
+        return res;
+    }
+}

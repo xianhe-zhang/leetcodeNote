@@ -394,6 +394,7 @@ class Solution:
 #         return res;
 #     }
 # }
+"""
 class Solution {
     public List<List<Integer>> levelOrder(TreeNode root) { 
         Queue<TreeNode> queue = new LinkedList<>();
@@ -413,3 +414,38 @@ class Solution {
         return res;
     }
 }
+"""
+
+# 剑指offer 26 树的子结构
+
+class Solution:
+    def isSubStructure(self, A, B) -> bool:
+        def recur(A, B):
+            if not B: return True
+            if not A or A.val != B.val: return False        # 将关键的逻辑判断与边界放在了一起，妙～
+            # 判断左子树、右子树树否相同。
+            return recur(A.left, B.left) and recur(A.right, B.right)
+            
+        # 这个return写的也好，首先AB不为空，要么A即可为B，要么B是A的其他支，并且通过self进入下一递归。
+        return bool(A and B) and (recur(A, B) or self.isSubStructure(A.left, B) or self.isSubStructure(A.right, B))
+        
+
+# 剑指offer
+class Solution:
+    def mirrorTree(self, root: TreeNode) -> TreeNode:
+        if not root: return 
+        #充分利用DFS的特性，从最底层开始整，然后交换左右子树
+        root.left, root.right = self.mirrorTree(root.right), self.mirrorTree(root.left)
+        return root
+# 当然也可以借助stack，BFS
+# 自顶向下的方法，针对x，那么先变x.left 和 x.right，然后再下去BFS，继续换。
+class Solution:
+    def mirrorTree(self, root: TreeNode) -> TreeNode:
+        if not root: return
+        stack = [root]
+        while stack:
+            node = stack.pop()
+            if node.left: stack.append(node.left)
+            if node.right: stack.append(node.right)
+            node.left, node.right = node.right, node.left
+        return root

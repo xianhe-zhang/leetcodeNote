@@ -342,3 +342,44 @@ class Solution:
         return sentinel.next
     
 # 19. Remove Nth Node From End of List
+# 自己写的，踩到坑了。就是两个while不能嵌套起来，否则容易出现head的边界问题！！！不能在同一个while中同时处理两次head的next
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+     
+        dummy = ListNode(0, head)
+        prev = dummy
+        
+        while n > 0:
+            head = head.next
+            n -= 1
+                
+        while head:
+            head = head.next
+            prev = prev.next
+        
+        if prev.next:
+            prev.next = prev.next.next
+            
+        return dummy.next
+# 这一题的思路还是两指针，三指针的写法；答案给的更清晰，遍历两次2N
+"""
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode dummy = new ListNode(0);
+    dummy.next = head;
+    int length  = 0;
+    ListNode first = head;
+    while (first != null) {
+        length++;
+        first = first.next;
+    }
+    length -= n;
+    first = dummy;
+    while (length > 0) {
+        length--;
+        first = first.next;
+    }
+    first.next = first.next.next;
+    return dummy.next;
+}
+"""
+

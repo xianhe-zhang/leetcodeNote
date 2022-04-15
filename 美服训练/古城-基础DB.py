@@ -477,6 +477,7 @@ class Solution:
         for num in nums:
             d[find(num)].append(num)
         return max([len(l) for l in d.values()]) 
+        
 # sorting的方法：
 class Solution:
     def longestConsecutive(self, nums: List[int]) -> int:
@@ -1112,5 +1113,122 @@ class Solution:
             node.next = cur = cur.next
         return dummy.next
 
-########################  LinkedList-2  ########################
-########################  Comparator  ########################
+# 234. Palindrome Linked List
+# 这道题虽然是easy，但是这个解法非常巧妙
+# 我们有一个self.front变量
+# 进入递归，如果有值，就证明递归能到这里，我们就进行逻辑判断；如果没值，说明已经判断完了，或者我们走到头了，返回True就成。其他题可能是False
+# 有值的逻辑：进入后我们直接判断递归结果，这样会导致我们在一开始进入逻辑的时候就进去递归，一直到尽头。
+# 走到尽头时候，返回再接下来的判断。层层回溯。
+class Solution:
+    def isPalindrome(self, head: Optional[ListNode]) -> bool:
+        self.front = head
+        
+        def dfs(cur = head):
+            if cur:
+                if not dfs(cur.next):
+                    return False
+                if self.front.val != cur.val:
+                    return False
+                self.front = self.front.next
+            return True
+        return dfs()
+    
+
+
+# 160. Intersection of Two Linked Lists
+# 当然你可以用set()/hashtable存
+# 也可以用下面这个方法
+class Solution:
+    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> ListNode:
+        pA = headA
+        pB = headB
+        
+        # 两个指针分别分别扫描两个linked list
+        # 如果没有相交，他们最终会同时停在None指针上
+        # 如果相交，那么pA==pB，跳出循环pa/pb都是相交的那个node
+        # 为什么？两个指针都会遍历两个linked list，所以最终点的距离是一样的，而且相交点的距离也是一样的，因为两个指针都走了一段共同的距离和两端不相交的距离，画个图就明白了。
+        while pA != pB:
+            pA = headB if pA == None else pA.next
+            pB = headA if pB == None else pB.next
+            
+        return pA
+
+# 138. Copy List with Random Pointer
+# 首先，我们清楚无论是next/random，都不可能是个环，就算是个环，我们也可以中止。
+# 所以第一种方法我们用递归的方法
+class Solution:
+    def __init__(self):
+        self.visitedHash = {}
+
+    def copyRandomList(self, head):
+
+        if head == None:
+            return None
+
+        # If we have already processed the current node, then we simply return the cloned version of it.
+        if head in self.visitedHash:
+            return self.visitedHash[head]
+
+        # 因为我们要返回的是一个deep copy的LinkedList, btw，返回最终的linkedlist不占用space complexity
+        node = Node(head.val, None, None) 
+        # node = ListNode(head.val, None)
+        self.visitedHash[head] = node
+
+        node.next = self.copyRandomList(head.next)
+        node.random = self.copyRandomList(head.random)
+
+        return node
+
+# 426. Convert Binary Search Tree to Sorted Doubly Linked List
+# 这一题蛮好的呀，把pre-order和linked list结合起来，值得二刷🌟！
+class Solution:
+    def treeToDoublyList(self, root: 'Optional[Node]') -> 'Optional[Node]':
+        def dfs(root):
+            nonlocal first, last
+            if root:
+                # 这里就是pre-order，左-处理逻辑-右
+                dfs(root.left)
+                if last:
+                    last.right = root
+                    root.left = last
+                else:
+                    first = root
+                last = root
+                dfs(root.right)
+        if not root: return None
+        first = last = None
+        dfs(root)
+        last.right = first
+        first.left = last
+        return first
+
+# 253. Meeting Rooms II
+class Solution:
+    def minMeetingRooms(self, intervals: List[List[int]]) -> int:
+        # 这里用到了heap的结构，不得不说这种精妙的题真的都是好题
+        # 我们把所有的endTime都push进堆; python中的堆是小根堆MinHeap！
+        # 队首元素都是最小的。
+        # 那么弹出与pushin的平衡在哪里，每次弹出最小值，就意味着一个meeting room用完了，可以用这个。最大值就不用增加了，最大值是同时room的一个量
+        if not intervals:
+            return 0
+        rooms = []
+        intervals.sort(key = lambda x: x[0])
+        heapq.heappush(rooms, intervals[0][1])
+        for i in intervals[1:]:
+            if rooms[0] <= i[0]:
+                heapq.heappop(rooms)
+            heapq.heappush(rooms, i[1])
+        return len(rooms)
+        
+# 256. Paint House // 一道OA题
+class Solution:
+    def minCost(self, costs):
+        if not costs: return 0
+        for i in range(len(costs) - 2, -1, -1):
+            costs[i][0] += min(costs[i+1][1], costs[i+1][2])
+            costs[i][1] += min(costs[i+1][0], costs[i+1][2])
+            costs[i][2] += min(costs[i+1][1], costs[i+1][0])
+        return min(costs[0][0], min(costs[0][1],costs[0][2]))
+
+
+        

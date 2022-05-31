@@ -403,7 +403,62 @@ class Solution15 {
 
 // 23. Merge K sorted LinkedLists
 class Solution16 {
-    public ListNode mergeKLists(ListNode[] lists) {
+    public ListNode mergeKLists(List<ListNode> lists) {
+        if (lists==null||lists.size()==0) return null;
         
+        PriorityQueue<ListNode> queue= new PriorityQueue<ListNode>(lists.size(),new Comparator<ListNode>(){
+            @Override
+            public int compare(ListNode o1,ListNode o2){
+                if (o1.val<o2.val)
+                    return -1;
+                else if (o1.val==o2.val)
+                    return 0;
+                else 
+                    return 1;
+            }
+        });
+        
+        ListNode dummy = new ListNode(0);
+        ListNode tail=dummy;
+        
+        for (ListNode node:lists)
+            if (node!=null)
+                queue.add(node);
+            
+        while (!queue.isEmpty()){
+            tail.next=queue.poll();
+            tail=tail.next;
+            
+            if (tail.next!=null)
+                queue.add(tail.next);
+        }
+        return dummy.next;
     }
 }
+
+// 198 house robber
+class Solution17 {
+    public int rob(int[] nums) {
+        int x0 = 0, x1 = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            int temp = Math.max(x0, x1);
+            x1 = x0 + nums[i];
+            x0 = temp;
+        }
+        return Math.max(x0,x1);
+    }
+}
+
+// 206. Reverse Linked List
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        ListNode prev = null, curr = head;
+        while (curr != null) {
+            ListNode temp = curr.next;
+            curr.next = prev;
+            prev = curr;
+            curr = temp;
+        }
+        return prev;
+
+

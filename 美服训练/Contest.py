@@ -101,3 +101,36 @@ class Solution:
         return len(dp) - 1
 # 最重要的就是理解dp[i]是什么？dp[i]是 minimum value of subsequence with length i
 # 知道这个就容易多了，每次遍历了一个v，然后我们就去更新已有的dp里面所有最短路径。
+
+
+
+# 2325. Decode the Message
+class Solution:
+    def decodeMessage(self, key: str, message: str) -> str:
+        decode_dict = {}
+        alpha = 'abcdefghijklmnopqrstuvwxyz'
+        # ascii_lowercase可以直接当变量使用
+        temp = ''
+        for ch in key:
+            if ch.isalpha() and ch not in temp:
+                temp+=ch
+        for i in range(26):
+            decode_dict[temp[i]] = alpha[i]
+        decode_dict[' '] = " "
+   
+        return ''.join(decode_dict[x] for x in message)
+
+
+# 2327. Number of People Aware of a Secret
+# dp就是每一天有多新人发现了secret，share之所以不用dp[i-1]替代是因为第一天的值不一样，为了照顾到edge case
+class Solution:    
+    def peopleAwareOfSecret(self, n, delay, forget):
+        dp = [1] + [0] * (n - 1)
+        mod = 10 ** 9 + 7
+        share = 0
+        for i in range(1, n):  
+            dp[i] =share = (share + dp[i - delay] - dp[i - forget]) % mod
+        return sum(dp[-forget:]) % mod
+# dp[i-delay] delay天前有多少人find了，share++
+# dp[i-forget] forget天前的这些find的人应该除去了，share--
+# 最后几天的forget天发现了多少人都是会在最后一天讲秘密的，因此全部计算进来。

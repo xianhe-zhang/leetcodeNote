@@ -134,3 +134,41 @@ class Solution:
 # dp[i-delay] delay天前有多少人find了，share++
 # dp[i-forget] forget天前的这些find的人应该除去了，share--
 # 最后几天的forget天发现了多少人都是会在最后一天讲秘密的，因此全部计算进来。
+
+
+# 2352. Equal Row and Column Pairs
+# 很神奇3个for循环，可以造成row和col的对比。
+class Solution:
+    def equalPairs(self, a: List[List[int]]) -> int:
+        n = len(a)
+        z = 0
+        for i in range(n):
+            for j in range(n):
+                for k in range(n):
+                    if a[i][k] != a[k][j]:
+                        break
+                else:
+                    z += 1
+        return z
+
+
+# 2353. Design a Food Rating System
+from sortedcontainers import SortedList
+
+class FoodRatings:
+
+    def __init__(self, foods: List[str], cuisines: List[str], ratings: List[int]):
+        self.mp = {}
+        self.data = defaultdict(SortedList)
+        for food, cuisine, rating in zip(foods, cuisines, ratings): 
+            self.mp[food] = (cuisine, rating)
+            self.data[cuisine].add((-rating, food))
+
+    def changeRating(self, food: str, newRating: int) -> None:
+        cuisine, rating = self.mp[food]
+        self.mp[food] = cuisine, newRating
+        self.data[cuisine].remove((-rating, food))
+        self.data[cuisine].add((-newRating, food))
+
+    def highestRated(self, cuisine: str) -> str:
+        return self.data[cuisine][0][1]

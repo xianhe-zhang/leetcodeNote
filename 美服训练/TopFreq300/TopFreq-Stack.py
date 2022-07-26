@@ -164,7 +164,7 @@ class Solution:
                     # 其他情况向上进位就好。
                     else:
                         stack.append(temp//curNumber) # 这里注意改动
-                
+                # 注意operation是之前的loop循环下来的！过往变量保存，这一点值得学习
                 operation = curChar
                 curNumber = 0
     

@@ -172,3 +172,98 @@ class FoodRatings:
 
     def highestRated(self, cuisine: str) -> str:
         return self.data[cuisine][0][1]
+
+
+
+# 2369. Check if There is a Valid Partition For The Array
+class Solution:
+    def validPartition(self, nums: List[int]) -> bool:
+        n = len(nums)
+        dp = [False] * (n + 1)
+        dp[0] = True
+        
+        for i in range(n):
+            if i and nums[i] == nums[i-1]:
+                dp[i + 1] = dp[i - 1]
+            if i >= 2 and nums[i] == nums[i-1] and nums[i] == nums[i-2]:
+                dp[i + 1] |= dp[i - 2]
+            if i >= 2 and nums[i] == nums[i-1] + 1 and nums[i-1] == nums[i-2] + 1:
+                dp[i + 1] |= dp[i - 2]
+        
+        return dp[-1]
+    
+    
+
+
+
+
+
+# 2373. Largest Local Values in a Matrix
+class Solution:
+    def largestLocal(self, grid: List[List[int]]) -> List[List[int]]:
+        def find(i, j):
+            x, y = i+1, j+1
+            res = 0
+            for nx in range(x-1, x+2):
+                for ny in range(y-1, y+2):
+                    
+                    res = max(res, grid[nx][ny])
+            return res
+        
+        result = []
+        n = len(grid)
+        for i in range(n-2):
+            row = []            # 可以这种方法扩展result！不一定最开始都init出来
+            for j in range(n-2):
+                row.append(find(i,j))
+            result.append(row)
+                
+        return result
+    
+
+    def largestLocal(grid: List[List[int]]) -> List[List[int]]:
+        def find(i, j):
+            x, y = i+1, j+1
+            res = 0
+            for nx in range(x-1, x+2):
+                for ny in range(y-1, y+2):
+                    res = max(res, grid[nx][ny])
+            return res
+
+        n = len(grid)
+        generated_grid = [[0] * 2 for _ in range(2)]     # 一定要这么写！二维数组先*再for
+        print(generated_grid)
+        for i in range(n-2):
+            for j in range(n-2):
+                res = find(i,j)
+                generated_grid[i][j] = res
+  
+                
+        return generated_grid[:]
+    
+
+
+    
+# 2375. Construct Smallest Number From DI String
+class Solution:
+    # 这道题如何思考？
+    # IIIDIDDD，初始值为123456789
+    # 如果碰到I我们不动，如果碰到D就需要遍历多少个D反转过来！
+    def smallestNumber(self, pattern: str) -> str:
+        n = len(pattern)
+        nums = list(range(1,n+2))
+        index = 0
+        while index < n:
+            if pattern[index] == "D":
+                first = second = index
+                while second < n and pattern[second] == "D":
+                    print(index)
+                    second += 1
+                if first != second:
+                    nums[first:second+1] = nums[first:second+1][::-1]
+                index = second    
+                continue
+            
+            index += 1
+        
+        return ''.join(map(str, nums))

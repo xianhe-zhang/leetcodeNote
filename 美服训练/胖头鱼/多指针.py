@@ -195,3 +195,82 @@ class Solution:
         return right - left + 1
 # 首先我们没必要keep k>0，因为我们找的是最大gap，只要sliding window达到一个最大值，我们不积极缩小window
 # 缩小window和扩展window可以是async的。
+
+
+# 680. Valid Palindrome II
+class Solution:
+    def validPalindrome(self, s: str) -> bool:
+        def helper(s, i):
+            ts = s[:i]+s[i+1:]
+            return ts == ts[::-1]
+        
+        l,r = 0, len(s)-1
+        while l < r:
+            if s[l] != s[r]:
+                return helper(s, l) or helper(s,r)
+            l += 1
+            r -= 1
+        return True
+    
+
+# 5. Longest Palindromic Substring
+class Solution:
+    def longestPalindrome(self, s):
+        res = ""
+        for i in range(len(s)):
+            res = max(self.helper(s, i, i), self.helper(s,i,i+1), res, key=len) # 这个key用的非常灵性
+        return res
+    
+    def helper(self, s, l, r):
+        while l >= 0 and r < len(s) and s[l] == s[r]:
+            l -= 1
+            r += 1
+        return s[l+1:r]
+
+
+# 57. Insert Interval
+class Solution:
+    def insert(self, intervals: 'List[Interval]', newInterval: 'Interval') -> 'List[Interval]':
+        start, end = newInterval
+        index = 0
+        res = []
+        
+        while index < len(intervals) and start > intervals[index][0]:
+            res.append(intervals[index])
+            index += 1
+        
+        if not res or res[-1][1] < start:
+            res.append(newInterval)
+        else:
+            res[-1][1] = max(end, res[-1][1])
+        
+        while index < len(intervals):
+            if res[-1][1] < intervals[index][0]:
+                res.append(intervals[index])
+            else:
+                res[-1][1] = max(res[-1][1], intervals[index][1])
+            index += 1 
+        return res
+
+
+
+
+# 986. Interval List Intersections
+class Solution:
+    def intervalIntersection(self, l1: List[List[int]], l2: List[List[int]]) -> List[List[int]]:
+        result = []
+        p1 = p2 = 0
+        
+        while p1 < len(l1) and p2 < len(l2):
+            left = max(l1[p1][0], l2[p2][0])
+            right = min(l1[p1][1], l2[p2][1])
+        
+            if right >= left:
+                result.append([left, right])    # 这个数学关系比较难想*
+
+            if l1[p1][1] < l2[p2][1]:
+                p1 += 1
+            else:
+                p2 += 1
+            
+        return result

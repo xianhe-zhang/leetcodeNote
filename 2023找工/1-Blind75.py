@@ -620,45 +620,734 @@ class Solution:
 
 
 
-
 # Interval	
-# 57
-# 56
-# 435
-# 252
-# 253
+# 57. Insert Interval
+class Solution:
+    def insert(self, intervals: List[List[int]], newInterval: List[int]) -> List[List[int]]:
+        output = []
+        index = 0
+        newStart, newEnd = newInterval
+
+        # phase-1: 看new的首位与intervals[1]比较，将之前的片段添加到output的前侧
+        while index < len(intervals) and intervals[index][1] < newStart:
+            output.append(intervals[index])
+            index += 1
+   
+        print(output)
+        # phase-2: 这题的难点在于，你不知道在phase1结束后，newInterval的图像情况
+            # /1 - newInterval位于中空的位置，不与任何重叠
+            # /2 - newInterval与index当前的Internval重叠 -> 重叠有很多种情况，部分重叠/全部重叠/超长重叠
+            # /3 - newInterval位于末端，此情况应该与/1一样直接append进去
+        if index == len(intervals) or intervals[index][0] > newEnd:
+            output.append(newInterval)
+        else:
+            output.append([min(newStart, intervals[index][0]), max(newEnd, intervals[index][1])])
+            index += 1 # 这里处理了intervals才需要index++; 上面append(newInterval)是不需要处理index的
+            
+        
+        print(output)
+        # phase-3: 你需要为Phase2擦屁股
+        while index < len(intervals):
+            if intervals[index][0] > output[-1][1]:
+                output.append(intervals[index])
+            else:
+                output[-1][1] = max(intervals[index][1], output[-1][1])
+            index += 1
+
+        return output
+
+# 56. Merge Intervals
+class Solution:
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        intervals.sort()
+        output = [intervals[0]]
+        for i in range(1, len(intervals)):
+            cur_interval = intervals[i]
+            cur_start, cur_end = cur_interval
+            if output[-1][1] >= cur_start:
+                output[-1][1] = max(cur_end, output[-1][1])
+            else:
+                output.append(cur_interval)
+        return output
+    
+
+# 435. Non-overlapping Intervals
+# 这一题还是贪心，我担忧的是贪心会不知道remove哪个interval是最优的，这样思考是不对的，要找到锚点anchor point
+# NOTE: 你的担忧源于一个很自然的直觉：在复杂问题中，简单的方法通常不能涵盖所有情况，可能会遗漏一些边缘情况。
+class Solution():
+    def eraseOverlapIntervals(self, intervals):
+        if not intervals: return 0
+        intervals.sort()
+        cnt = 0
+        min_reach = intervals[0][1]    
+    
+        # 针对每一个interval，我们只用比较当前min_reach和start
+        # 为什么？我们肯定是想让min_reach右侧越小越好，因为是排序过的。
+        for s, e in intervals[1:]:
+            # 如果s<min_reach，意味着我们已经尽力避免了，但还是没有办法，因此更新min_reach和cnt
+            # 左边界排序后，只看右边界，利用min()决定保留哪一个具体的interval, 不用担心删除较大的end的interval会有什么影响。
+            # 因为右边选择更小的end，肯定是更没有影响的，因此你担心的是左边的影响。
+            # 假设我们有A,B两个interval，如果A完全包含B，min()选择B，排除A完全没问题；
+            # 如果A的end更小，Start也更小，也就是说A和B部分重合，你担心说A_start ~ b_start这一部分会overlap别的interval，但是你根据min()仍选择了A -》 这种顾虑不存在
+            # why？因为这种情况下，A将会和其他之前interval比如C overlap，但是明显C的end更小，在之前的循环中就不会选择A了，直接把该可能排除了。
+            if s < min_reach:
+                cnt += 1
+                min_reach = min(min_reach, e) #
+            else:
+                min_reach = e
+                
+        return cnt
+    
+
+
+# 252 - meeting room - 没啥难的，排序就成，只需要记录end
+# 253. Meeting Rooms II
+import heapq
+class Solution:
+    def minMeetingRooms(self, intervals: List[List[int]]) -> int:
+        if not intervals: return 0
+        intervals.sort()
+        room = 1 # 这里的1是关键点。
+        # we may nead a pq to store end_time
+        # do we need ans=max(ans, cur)? NO -> CUZ pq store currently used meeting rooms.
+        pq = []
+        heapq.heappush(pq, intervals[0][1])
+        for s, e in intervals[1:]:
+            if s >= pq[0]: 
+                heapq.heappop(pq)
+                room -= 1
+            room += 1
+            # room = max(room, len(pq)) 这样就不用+1，-1了。
+            heapq.heappush(pq,e)
+
+        return room
+
+
 # LinkedList	
-# 206
-# 141
-# 21
-# 23
-# 19
-# 143
+# 206 Reverse LinkedList
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        prev = None
+        cur = head
+        while cur:
+            # next_node = cur.next
+            # cur.next = prev
+            # prev = cur
+            # cur = next_node
+            cur.next, prev, cur = prev, cur, cur.next
+        return prev
+    
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        # still worth considering: where we connect two nodes, but in one recursion.
+        # the only way we communicate is .next.next right? because recursion only return next node. And in the current recursion, we cannot access to the previous node, but only next nodes.
+        if not head or not head.next: return head # "not head not necessary"
+
+        pn = self.reverseList(head.next)
+        pn.next = head
+        head.next = None
+        return pn
+###########上面是我错误的写法，很有借鉴意义，说明我掌握的不是很牢固。
+# pn在每一层call中意味着什么意味着从最底层返回的node，这是一个技巧，因此在最后的return中也是最后一个node
+# 下面这种写法也错误了！如果在最后一行return进入递归会发生什么？会发生进入递归与递归中操作顺序的混乱。
+# 先进行操作再递归，会改变递归原有的数据结构！因此你需要额外的一行代码把递归的结果存储起来。
+# 比如 p = self.reverseList(head.next) -> return p;
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head or not head.next: return head 
+        head.next.next = head
+        head.next = None
+        return self.reverseList(head.next)
+    
+    
+# 141. Linked List Cycle 
+    # - 快慢指针
+    # - hashmap
+
+# 21. Merge Two Sorted Lists
+# 这题也很有意思：可以通过递归做，也可以通过while循环做
+class Solution:
+    def mergeTwoLists(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        if not l1: return l2
+        if not l2: return l1
+        head = ptr = ListNode(0)
+        # merge two 
+        while l1 and l2:
+            if l1.val <= l2.val:
+                ptr.next = l1
+                l1 = l1.next
+            else:
+                ptr.next = l2
+                l2 = l2.next
+            ptr = ptr.next
+        
+        # connect the rest
+        if l1: ptr.next = l1
+        if l2: ptr.next = l2
+
+        return head.next
+    
+# 思考一下，每一层recursion返回的是什么？是一个node，此node之后的所有node都已经安排好了。
+# 然后在if-else中，如果l1，我们将l1 cur node连接好之后的recursion，然后return l1就成了。
+class Solution:
+    def mergeTwoLists(self, l1, l2): 
+        if not l1: return l2
+        if not l2: return l1
+
+        if l1.val <= l2.val:
+            l1.next = self.mergeTwoLists(l1.next, l2)
+            return l1
+        else:
+            l2.next = self.mergeTwoLists(l1, l2.next)
+            return l2
+            
+
+            
+# 23. Merge k Sorted Lists
+# 这是python2的答案，py3用heapq
+"""
+暴力方法:
+
+把所有链表的节点值放入一个数组。
+对数组进行排序。
+创建一个新的已排序链表，并将排序后的数组中的值逐一插入。
+时间复杂度: O(N log N) (其中 N 是所有链表中的元素总数)
+逐一比较:
+
+比较每个链表头部的节点，选择最小的。
+将选中的节点移到结果链表。
+时间复杂度: O(kN) (k 是链表数量)
+使用优先队列:
+
+使用一个最小堆（或优先队列）来比较每个链表的头部节点。
+每次从堆中取出最小节点并将其添加到结果链表。
+将被选中的链表头部的下一个节点放入堆中。
+时间复杂度: O(N log k)
+分而治之:
+
+使用分治的思想，两两合并链表，直到合并为一个链表。
+具体来说，假设有 k 个链表，首先将它们分成 k/2 对（如果 k 是奇数，则最后一个独自为一对）。
+对每一对进行合并，然后再将结果进行合并，直到合并为一个链表。
+时间复杂度: O(N log k)
+递归合并:
+
+这与分治方法类似，但更倾向于递归方式的实现。
+首先合并前两个链表，然后合并结果与第三个链表，以此类推。
+时间复杂度: 取决于具体实现，但在最坏情况下可能为 O(k^2N)
+"""
+from Queue import PriorityQueue
+class Solution(object):
+    def mergeKLists(self, lists):
+        head = ptr = ListNode(0)
+        q = PriorityQueue()
+        for l in lists:
+            if l:
+                q.put((l.val, l))
+        while not q.empty():
+            val, node = q.get()
+            ptr.next = node
+            ptr = ptr.next
+            node = node.next
+            if node: q.put((node.val, node))
+
+        return head.next
+    
+
+# 19 Remove Nth Node From End of List
+
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        fast = slow = head
+        # 这一题中n,fast,slow的关系比较不太好把握。
+        while n and fast:
+            n -= 1
+            fast = fast.next
+        
+        if not fast: return head.next 
+
+
+        # 如果fast还有的话，就要同时往后走了
+        while fast.next: # 之所以.next是因为我们需要fast走到最后none的位置
+            fast, slow = fast.next, slow.next
+
+        slow.next = slow.next.next
+        return head
+
+# 143. Reorder List
+class Solution:
+    def reorderList(self, head: ListNode) -> None:
+        if not head:
+            return 
+        
+        # find the middle of linked list [Problem 876]
+        # in 1->2->3->4->5->6 find 4 
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next 
+            
+        # reverse the second part of the list [Problem 206]
+        # convert 1->2->3->4->5->6 into 1->2->3->4 and 6->5->4
+        # reverse the second half in-place
+        prev, curr = None, slow
+        while curr:
+            curr.next, prev, curr = prev, curr, curr.next       
+
+        # merge two sorted linked lists [Problem 21]
+        # merge 1->2->3->4 and 6->5->4 into 1->6->2->5->3->4
+        first, second = head, prev
+        while second.next:
+            first.next, first = second, first.next
+            second.next, second = first, second.next
+
+
+
 # Matrix	
-# 73
-# 54
-# 48
-# 79
+# 73. Set Matrix Zeroes
+# 第一个方法很简单，利用两个set分别记录横纵坐标，然后遍历修改值
+# The following method can avoid extra espace.
+class Solution(object):
+    def setZeroes(self, matrix):
+        setFirstRow = False
+        R, C = len(matrix), len(matrix[0])
+        # Phase-1 Record 0 positions in the first row/col
+        for i in range(R):
+            if matrix[i][0] == 0: setFirstRow = True # we won't change the first row for now, but will do later.
+            for j in range(1, C):
+                if matrix[i][j] == 0:
+                    matrix[i][0] = 0
+                    matrix[0][j] = 0
+            
+        # Phase-2 change cells into 0's as per first row/col record
+        for i in range(1, R):
+            for j in range(1, C):
+                if not matrix[i][0] or not matrix[0][j]: matrix[i][j] = 0
+
+        
+        # Phase-3 change first COL
+        if matrix[0][0] == 0: # (0,0)==0 有两种可能性；1. 原本为0；2.first col本身有0； -> 无论如何第一列都要变0
+            for j in range(1,C):
+                matrix[0][j] = 0
+
+        # phase-4 change first ROW:
+        if setFirstRow:
+            for i in range(R):
+                matrix[i][0] = 0
+
+
+# 79. Word Search
+class Solution(object):
+    def exist(self, board, word):
+        if not board or not word: return False        
+
+        def dfs(i, j, word):
+            
+            # 这种写法不正确！太复杂了，既然四个方向某个方向满足就满足，那么可以用下面的found= or就可以了，为什么不能直接返回？因为这一题是回溯，要将修改的数据复原
+            # for ni, nj in ((i+1, j),(i-1, j),(i, j+1),(i, j-1)):
+            #     if 0 <= ni < len(board) and 0 <= nj <len(board[0]):
+            #         return dfs(ni, nj, word[1:])
+     
+
+            if not word: return True
+            if i < 0 or i >= len(board) or j < 0 or j >= len(board[0]) or board[i][j] != word[0]:
+                return False
+            cur = board[i][j]
+            board[i][j] = "#"
+            
+            # Check in all 4 directions
+            found = (dfs(i+1, j, word[1:]) or 
+                     dfs(i-1, j, word[1:]) or 
+                     dfs(i, j+1, word[1:]) or 
+                     dfs(i, j-1, word[1:]))
+            
+            board[i][j] = cur
+            return found
+
+
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if dfs(i, j, word):
+                    return True
+
+        return False
+
+            
+
+# 54. Spiral Matrix
+class Solution(object):
+    def spiralOrder(self, matrix):
+        # 1. for-loop len(matrix) // 2? 并没有这种，因为最后一行 may be right or down
+        # 2. count(m*n) ✅
+        
+        up, down, left, right = 0, len(matrix)-1, 0, len(matrix[0])-1
+        res = []
+        while len(res) < len(matrix)*len(matrix[0]):
+        # 首先聊聊后两个为什么需要if? if up!=down -> 此时边界至少还有多个行，因此可以向左走； 如果==了，那么只有一行了，因此在之前向右走的for循环中就已经记录过了
+        # 为什么向下走的时候不需要判断？首先向下走时一定经过了向右走；因此目前来到了可以遍历的最右边；不需要考虑是否单行/列的问题。
+        # 为什么向右走的可以如此坚决？因为肯定不满足while的循环，因此一定是有可以走的路的。
+
+            # Right
+            for i in range(left, right+1): res.append(matrix[up][i])
+            # Down
+            for i in range(up+1, down+1): res.append(matrix[i][right])
+
+            # Left
+            if up != down:
+                for i in range(right-1, left-1, -1): res.append(matrix[down][i])
+            
+            # Up
+            if left != right:
+                for i in range(down-1, up, -1): res.append(matrix[i][left])
+            # change boundaries
+            left += 1
+            right -= 1
+            up += 1
+            down -= 1
+        return res
+
+# 48. Rotate Image
+# 这道题的思路都想出来了，反转/数学对应旋转，但是都没写出来...
+class Solution:
+    def rotate(self, matrix: List[List[int]]) -> None:
+        # 思路出了问题；如果是按照数学对应关系的写法，我们的基准是matrix四象限中的其中一个象限，然后利用数学关系找到所有值。
+        # 看到这题不要怕，你要明确的是，你需要以什么为基准。
+        n = len(matrix[0])
+        
+        for i in range(n // 2 + n % 2): # 如果是2X2刚好，刚好四个格子，四个象限；如果是3*3，每个象限负责2个格子(1*2)，最中间的不需要变化，而非对称的格子四个象限刚好可以互补（这是你没想明白的地方），这也就是为什么在for循环中，我们只需要在一个地方有n%2就可以了。
+            for j in range(n // 2):
+                tmp = matrix[n - 1 - j][i]
+                matrix[n - 1 - j][i] = matrix[n - 1 - i][n - j - 1]
+                matrix[n - 1 - i][n - j - 1] = matrix[j][n - 1 -i]
+                matrix[j][n - 1 - i] = matrix[i][j]
+                matrix[i][j] = tmp
+
+
+class Solution:
+    def rotate(self, matrix: List[List[int]]) -> None:
+        self.transpose(matrix)
+        self.reflect(matrix)
+    
+    def transpose(self, matrix):
+        n = len(matrix)
+        # 只用一半就可以了，交换x,y
+        for i in range(n):
+            for j in range(i + 1, n):
+                matrix[j][i], matrix[i][j] = matrix[i][j], matrix[j][i]
+
+    def reflect(self, matrix):
+        n = len(matrix)
+        # 只用一半，交换一个对称坐标就可以
+        for i in range(n):
+            for j in range(n // 2):
+                matrix[i][j], matrix[i][-j - 1] = matrix[i][-j - 1], matrix[i][j]
+
 # String	
-# 3
-# 424
-# 76
-# 242
-# 49
-# 20
-# 125
-# 5
-# 647
-# 271
+# 3. Longest Substring Without Repeating Characters - 滑动窗口 - 简单
+
+# 424. Longest Repeating Character Replacement
+# 方法1: 利用二分找
+    # 这里我们二分的是
+    # lo是最长能满足的substring，hi是第一个不满足的substring长度
+    # lo+1是为了避免lo == hi，它们俩的含义都不一样，而且mid会一直在lo，而无法前进到hi，从而跳出循环。
+    # while lo + 1 < hi: # 这里用这个是这个解法的take-away
+
+# 这里涉及到滑动窗口一个有趣的trick/变体：我们不需要缩小窗口，只用增大就可以了。
+# 那么什么情况下可以不用缩小窗口：1. 目标是最大/最长 2. 缩小窗口不会帮助我们 但是记住你需要判断能否扩大窗口。
+class Solution:    
+     def characterReplacement(self, s, k):
+        max_frequency = window_length = 0
+        count = collections.Counter()
+        
+        for r in range(len(s)):
+            ch = s[r]
+            count[ch] += 1
+            max_frequency = max(max_frequency, count[ch]) # to update MAX frequency of chars in our window
+            
+            # if len - fre < k means: we still can do operations / can add current word into window
+            if window_length - max_frequency < k: 
+                window_length += 1
+            else: 
+                l_ch = s[r-window_length]
+                count[l_ch] -= 1 
+                
+        return window_length
+     
+
+# 76. Minimum Window Substring
+# 遇到了一个点点磕绊，我们是需要minimum window，while循环使用来缩小窗口的，因此寻求答案的过程应该在while循环中。
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+        target_dict = collections.Counter(t)
+        word_needs = len(target_dict)
+        s_cnt = collections.defaultdict(int)
+        l = 0
+        word_have = 0
+        temp_max = float('inf')
+        ans = ""
+        
+        for r in range(len(s)):
+            cur = s[r]
+            s_cnt[cur] += 1
+            if s_cnt[cur] == target_dict[cur]: word_have += 1
+
+            while word_have == word_needs and l <= r:
+                if r-l+1 < temp_max: 
+                    ans = s[l:r+1]
+                    temp_max = r-l+1
+                l_ch = s[l]
+                s_cnt[l_ch] -= 1
+                if s_cnt[l_ch] < target_dict[l_ch]: word_have -= 1
+                
+                l += 1 
+                
+        return ans
+            
+        
+# 242. Valid Anagram - 简单秒杀
+# 49。Group Anagrams
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        # 利用了每个string里的元素(无关顺序)当作index进行归类
+        # 利用tuple的哈希可以作key这一特性
+        ans = collections.defaultdict(list)
+        for s in strs:
+            ans[tuple(sorted(s))].append(s)
+        return ans.values()
+# 20. Valid Parentheses
+class Solution:
+    def isValid(self, s: str) -> bool:
+        m = {
+            "]":"[",
+            "}":"{",
+            ")":"("
+        }
+
+        stack = []
+
+        for ch in s:
+            if stack and ch in m and stack[-1] == m[ch]:
+                stack.pop()
+            else:
+                stack.append(ch)
+        return not stack
+    
+
+# 5. Longest Palindromic Substring
+# 1-check all substrings(bf) -O(n^3) 遍历是n^2 检查ifPalindrome是n
+# 2-dp-O(n^2)/O(n^2)
+# 3-expand from center O(n^2)/O(n^1) -> 利用ans存放最优解，
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        n = len(s)
+        dp = [[False] * n for _ in range(n)]
+        ans = [0, 0]
+        
+        # Case 1 - 奇数
+        for i in range(n):
+            dp[i][i] = True
+        
+        # Case 2 - 偶数
+        for i in range(n - 1):
+            if s[i] == s[i + 1]:
+                dp[i][i + 1] = True
+                ans = [i, i + 1]
+
+        for diff in range(2, n): # diff就是substring的长度
+            for i in range(n - diff): # i是substring可能的start_index
+                j = i + diff
+                if s[i] == s[j] and dp[i + 1][j - 1]:
+                    dp[i][j] = True
+                    ans = [i, j]
+                
+        # 因为遍历的时候从小往大看，因此最后一个满足条件的一定是最长。
+        i, j = ans
+        return s[i:j + 1]
+
+
+class Solution:
+    def longestPalindrome(self, s):
+        res = ""
+        for i in range(len(s)):
+            res = max(self.helper(s, i, i), self.helper(s,i,i+1), res, key=len)
+        return res
+    
+    def helper(self, s, l, r):
+        while l >= 0 and r < len(s) and s[l] == s[r]:
+            l -= 1
+            r += 1
+        return s[l+1:r]
+
+
+
+# 125. Valid Palindrome / 两种方法：1-比较相反的， 2-双指针
+class Solution:
+    def isPalindrome(self, s: str) -> bool:
+        i, j = 0, len(s)-1
+        while i < j:
+            # isalum只会判断数字和char
+            while i < j and not s[i].isalnum():
+                i += 1
+            while i < j and not s[j].isalnum():
+                j -= 1
+            
+            if s[i].lower() != s[j].lower():
+                return False 
+            i += 1
+            j -= 1
+        return True
+
+class Solution:
+    def isPalindrome(self, s: str) -> bool:
+        result = ''.join([char.lower() for char in s if char.isalnum()])
+        return result == result[::-1]
+
+# 647. Palindromic Substrings 
+# also 类似第五题的解法，expand from the center可以把空间优化到O(1)
+class Solution:
+    def countSubstrings(self, s: str) -> int:
+        n = len(s)
+        res = 0
+        dp = [[0]*n for _ in range(n)]
+        for r in range(n): # r是右边界
+            for l in range(r, -1, -1): # l是左边界，不过一定要从小往大去找值
+                if s[l] == s[r] and (r-l<2 or dp[l+1][r-1]): # i-j<2是为了判断substring为1/2的场景。
+                    dp[l][r] = 1
+                    res += 1                
+        return res
+    
+# 271. Encode and Decode Strings
+# What to use as a delimiter? Each string may contain any possible characters out of 256 valid ascii characters.
+class Codec:
+    def encode(self, strs: List[str]) -> str:
+        if len(strs) == 0: return chr(258)
+        return chr(257).join(x for x in strs)
+    def decode(self, s: str) -> List[str]:
+        if s == chr(258): return []
+        return s.split(chr(257))
+
+
 # Tree	
-# 104
-# 100
-# 226
-# 124
-# 102
-# 297
-# 572
-# 105
+# 104. Maximum Depth of Binary Tree
+class Solution:
+    def maxDepth(self, root):
+        if not root: return 0
+        return max(self.maxDepth(root.left), self.maxDepth(root.right)) + 1
+        
+# 100. Same Tree
+class Solution:
+    def isSameTree(self, p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:
+        if not p and not q: return True
+        if not p or not q: return False
+        if p.val != q.val: return False
+        return self.isSameTree(p.right, q.right) and self.isSameTree(p.left, q.left)
+    
+# 226. Invert Binary Tree
+class Solution:
+    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        if not root: return None
+        root.left, root.right = self.invertTree(root.right), self.invertTree(root.left)
+        return root 
+    
+# 124. Binary Tree Maximum Path Sum
+class Solution:
+    def maxPathSum(self, root):
+        result = float('-inf')
+        def dfs(node):
+            nonlocal result
+            if not node: return 0
+            val = node.val
+            left = dfs(node.left)
+            right = dfs(node.right)
+            # 这里不需要单独比较val+left, val+right的原因是没必要，当前path左右都考虑的情况(val+left+right)已经包含
+            # 不需要单独考虑(val+left/right)，你之所以想考虑的原因是因为存在：当前node+left/right为max；
+            # 但是在递归中这种情况已经考虑了，how？-> 首先看reulst, node+left/right为max一定意味着其中left/right一方小于0，我们在return的那一行已经把小于0的排除了，因此left+right+val其实就包含了val+left/right.
+            result = max(result, left+right+val) 
+            return max(0, left+val, right+val)
+        dfs(root)
+        return result
+
+# 102. binary tree level order traversal
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        if not root: return []
+        res = []
+        q = collections.deque([root])
+        while q:
+            cur_list = []
+            for _ in range(len(q)):
+                cur_node = q.popleft()
+                cur_list.append(cur_node.val)
+                if cur_node.left: q.append(cur_node.left)
+                if cur_node.right: q.append(cur_node.right)
+
+            res.append(cur_list)
+        return res
+    
+
+# 297. Serialize and Deserialize Binary Tree
+class Codec: 
+    # 🌟如果你不想用一个全局变量处理string，那么直接将string当成一个参数行走在各个recursion中。
+    def serialize(self, root):
+        def helper(node, t):
+            if not node:
+                t += "#,"
+            else:
+                t += str(node.val)+","
+                t = helper(node.left, t) # 🌟这里必须用t= 否则没有办法更新t，因为t不是全局变量！！！
+                t = helper(node.right, t)
+            return t
+        return helper(root, "") 
+
+    def deserialize(self, data):
+        tl = data.split(",")
+        def helper(tl):
+            if tl[0] == "#":
+                tl.pop(0)
+                return None
+            cur_node = TreeNode(tl.pop(0))
+            cur_node.left = helper(tl)
+            cur_node.right = helper(tl)
+            return cur_node
+
+        return helper(tl)
+
+# 572. Subtree of Another Tree
+class Solution:
+    # 重点是isSubtree的逻辑应该是怎么样，我本来是想用for循环找所有node，然后调用helper一一比较，这样子的话代码比较复杂
+    # 如果利用递归，我们在每次recursion只能比较两个cur_node,是没有办法比较当前cur_node的son nodes的，搞清楚recursion。
+    def isSubtree(self, root: Optional[TreeNode], subRoot: Optional[TreeNode]) -> bool:
+        if not root: return False
+        if self.isSameTree(root, subRoot): return True
+        return self.isSubtree(root.left, subRoot) or self.isSubtree(root.right, subRoot)
+    
+    def isSameTree(self, p, q): # 这个简单。
+        if not p and not q: return True
+        if not p or not q or p.val != q.val: return False
+        return self.isSameTree(p.left, q.left) and self.isSameTree(p.right,q.right)
+
+# 105. Construct Binary Tree from Preorder and Inorder Traversal
+# preorder is to generate nodes in order，这样我们可以自上而下地构建树。
+# inorder的特点是，左子树的值都在cur的左边，右子树的值都在cur的右边；
+# 我们限制index范围的目的就是确定每个子树的范围，以防止node出现在错误的位置上。
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        
+        index_map = {v : i for i, v in enumerate(inorder)}
+        pre_index = 0 
+
+        # 只需要传递进去index的范围，当前子树的范围就可以了。
+        def construct(l, r):
+            nonlocal pre_index
+            cur_node = TreeNode(preorder[pre_index])
+            in_index = index_map[preorder[pre_index]]
+            pre_index += 1
+            
+            if in_index > l: 
+                cur_node.left = construct(l, in_index-1)
+            if in_index < r:
+                cur_node.right = construct(in_index + 1,r)
+            return cur_node
+        return construct(0, len(preorder)-1)
 # 98
 # 230
 # 235

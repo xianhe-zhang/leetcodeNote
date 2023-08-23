@@ -1348,13 +1348,279 @@ class Solution:
                 cur_node.right = construct(in_index + 1,r)
             return cur_node
         return construct(0, len(preorder)-1)
-# 98
-# 230
-# 235
-# 208
-# 211
-# 212
-# Heap	
-# 23
-# 347
-# 295
+# 98. Validate Binary Search Tree
+class Solution:
+    def isValidBST(self, root: Optional[TreeNode]) -> bool:
+        def checkSubtree(root, l=float('-inf'), r=float('inf')):
+            if not root: return True
+            if root.val >= r or root.val <= l: return False
+            return checkSubtree(root.left, l, root.val) and checkSubtree(root.right, root.val, r)
+        return checkSubtree(root)
+
+# 230. Kth Smallest Element in a BST
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        self.k = k
+        self.target = -1 
+        def inorder(node):
+            if not node: return -1
+
+            inorder(node.left)
+            self.k -= 1
+            if self.k == 0: 
+                self.target = node.val
+                return 
+            inorder(node.right)
+        inorder(root)
+        return self.target
+class Solution:
+
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        def inorder(r):
+            return inorder(r.left) + [r.val] + inorder(r.right) if r else []
+        return inorder(root)[k - 1]
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        stack = []
+        while True:
+            while root:
+                stack.append(root)
+                root = root.left
+            root = stack.pop()
+            k -= 1
+            if not k: return root.val
+            root = root.right
+
+def preorderTraversal(root: TreeNode):
+    if not root:
+        return []
+    stack, output = [root], []
+    while stack:
+        node = stack.pop()
+        if node:
+            output.append(node.val)
+            stack.append(node.right)  # 先右后左，这样左子节点会先出栈
+            stack.append(node.left)
+    return output
+
+def inorderTraversal(root: TreeNode):
+    stack, output = [], []
+    current = root
+    while current or stack:
+        while current:  # 一直到最左边
+            stack.append(current)
+            current = current.left
+        current = stack.pop()
+        output.append(current.val)
+        current = current.right
+    return output
+
+def postorderTraversal(root: TreeNode):
+    if not root:
+        return []
+    stack, output = [root], []
+    while stack:
+        node = stack.pop()
+        if node:
+            output.append(node.val)
+            stack.append(node.left)
+            stack.append(node.right)
+    return output[::-1]  # 最后反转得到正确的后序遍历
+
+
+# 235. Lowest Common Ancestor of a Binary Search Tree
+# 236题目是关于没有BST这么强力的设定的。那一题返回的就是True/False，因此需要一个全局的self.node去取recursion中满足条件的值
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        rv,pv,qv = root.val, p.val, q.val
+        if rv < pv and rv < qv: return self.lowestCommonAncestor(root.right, p, q)
+        if rv > pv and rv > qv: return self.lowestCommonAncestor(root.left, p, q)
+        return root
+
+# 208. Implement Trie (Prefix Tree) Trie树也是属于固定套路的东西。
+class Trie:
+    def __init__(self):
+        self.trie = dict()
+        self.WORD_KEY = "#"
+
+    def insert(self, word: str) -> None:
+        cur = self.trie
+        for ch in word:
+            cur = cur.setdefault(ch, {})
+        cur[self.WORD_KEY] = word
+
+    def search(self, word: str) -> bool:
+        cur = self.trie
+        for i in range(len(word)):
+            ch = word[i]
+            
+            if ch in cur:
+                cur = cur[ch]
+                if i == len(word) - 1 and self.WORD_KEY in cur: return True
+            else:
+                break
+        return False
+        
+
+    def startsWith(self, prefix: str) -> bool:
+        cur = self.trie
+        for ch in prefix:
+            if ch not in cur: return False
+            cur = cur[ch]
+        return True
+        
+# 211# 211. Design Add and Search Words Data Structure
+# 这一题用迭代的方法不好做，精髓在于遇到"."要去遍历所有子树，因此利用recursion的方法会比较好一点。
+class WordDictionary:
+    def __init__(self):
+        self.trie = {}
+
+
+    def addWord(self, word: str) -> None:
+        node = self.trie
+        for ch in word:
+            if not ch in node:
+                node[ch] = {}
+            node = node[ch]
+        node['$'] = True
+
+    def search(self, word: str) -> bool:
+        def search_in_node(word, node) -> bool:
+            for i, ch in enumerate(word):
+                if not ch in node:
+                    if ch == '.':
+                        for x in node:
+                            if x != '$' and search_in_node(word[i + 1:], node[x]): # 注意了只有遇到.的时候才会进入分支，否则直接通过外侧if-else进入
+                                return True
+                    return False
+                else:
+                    node = node[ch]
+            return '$' in node
+
+        return search_in_node(word, self.trie)
+    
+
+# 212. Word Search II
+# 这一题还是有一些细节没有理清楚。比如树中哪里决定是一个出现过单词的结尾；比如在遍历的时候，应该按照什么来遍历。
+class Solution:
+    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        wordTree = dict()
+        self.res = []
+
+
+        for w in words:
+            cur = wordTree # 这样直接操纵cur，wordTree也会变化
+            for ch in w:
+                cur = cur.setdefault(ch, {})
+            cur["#"] = w # "#"表示当前层是某个word的结尾。
+
+    
+        def bt(parent, i, j):
+            cur_ch = board[i][j]
+            if cur_ch not in parent: return 
+            cur_level = parent[cur_ch]
+            
+            # 如果有重复的值进来，我们需要处理么？
+            if "#" in cur_level: 
+                self.res.append(cur_level["#"])
+                cur_level.pop("#") # 如果一个单词找到过一次，那么就可以不用再找第二次
+
+            board[i][j] = "#"
+            for ni, nj in ((i+1,j),(i-1,j),(i,j+1),(i,j-1)):
+                if 0 <= ni < len(board) and 0 <= nj < len(board[0]) and board[ni][nj] != "#":
+                    bt(cur_level, ni, nj)
+            board[i][j] = cur_ch
+
+
+            if not cur_level: parent.pop(cur_ch) # 如果当前cur_level没有东西了，可以直接剪枝丢弃。
+            return 
+            
+        
+        # 直接遍历board，然后去找wordTree
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] in wordTree:
+                    bt(wordTree, i, j)
+
+        return self.res
+
+        
+     
+# 347. Top K Frequent Elements
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        count = collections.Counter(nums).most_common(k)
+        res = []
+        for x, y in count:
+            res.append(x)
+        return res
+
+
+    def topKFrequent2(self, nums: List[int], k: int) -> List[int]: 
+        # O(1) time 
+        if k == len(nums):
+            return nums
+        count = collections.Counter(nums)   
+        return heapq.nlargest(k, count.keys(), key=count.get) 
+
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        count = Counter(nums)
+        unique = list(count.keys())
+        
+        def partition(left, right, pivot_index) -> int:
+            pivot_frequency = count[unique[pivot_index]]
+            # 1. move pivot to end
+            unique[pivot_index], unique[right] = unique[right], unique[pivot_index]  
+            
+            # 2. move all less frequent elements to the left
+            store_index = left
+            for i in range(left, right):
+                # store_index从左边开始，不一定随着right移动，只有当满足小于pivot的条件时，才会向左移动，因此，store_index是右侧的第一位，在结束后需要与pivot交换。
+                if count[unique[i]] < pivot_frequency:
+                    unique[store_index], unique[i] = unique[i], unique[store_index]
+                    store_index += 1
+
+            # 3. move pivot to its final place
+            unique[right], unique[store_index] = unique[store_index], unique[right]  
+            
+            return store_index
+        
+        def quickselect(left, right, k_smallest) -> None:
+            if left == right: return
+            
+            pivot_index = random.randint(left, right)     
+            pivot_index = partition(left, right, pivot_index)
+
+            if k_smallest == pivot_index:
+                 return 
+
+            elif k_smallest < pivot_index:
+                quickselect(left, pivot_index - 1, k_smallest)
+   
+            else:
+                quickselect(pivot_index + 1, right, k_smallest)
+         
+        n = len(unique) 
+        quickselect(0, n - 1, n - k)
+        return unique[n - k:]
+
+# 295. Find Median from Data Stream 
+# 有点复杂而已。
+from heapq import *
+class MedianFinder:
+    def __init__(self):
+        self.small = []  # the smaller half of the list, max heap (invert min-heap)
+        self.large = []  # the larger half of the list, min heap
+
+    def addNum(self, num):
+        if len(self.small) == len(self.large):
+            heappush(self.large, -heappushpop(self.small, -num))
+        else:
+            heappush(self.small, -heappushpop(self.large, num))
+
+    def findMedian(self):
+        if len(self.small) == len(self.large):
+            return float(self.large[0] - self.small[0]) / 2.0
+        else:
+            return float(self.large[0])

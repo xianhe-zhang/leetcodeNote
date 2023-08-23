@@ -1,4 +1,4 @@
-# Meta
+# Google
 # 3 - Longest Substring Without Repeating Characters
 # 3种解法
     # 3.1 正常counter/defaultdict 记录 + 正常更新

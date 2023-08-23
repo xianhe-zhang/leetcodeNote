@@ -1624,3 +1624,5 @@ class MedianFinder:
             return float(self.large[0] - self.small[0]) / 2.0
         else:
             return float(self.large[0])
+# MaxHeap 和 MinHeap的命名是针对堆顶本身的。
+# MaxHeap顶部存的Max，因此其他值都小于root，因此存放的数列中较小一半的值，因为这样maxHeap的root更接近中位。

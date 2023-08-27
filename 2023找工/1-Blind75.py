@@ -1613,6 +1613,10 @@ class MedianFinder:
         self.small = []  # the smaller half of the list, max heap (invert min-heap)
         self.large = []  # the larger half of the list, min heap
 
+    # 题目两个关键逻辑：
+        # 1. 如果两个heap一样，先放入MaxHeap
+        # 2. 如何确定，每次会动态更新放入的值，因为新的值可能是并不应该放入maxHeap/minHeap，因为放入哪个heap是仅仅由heap长度决定的，与大小无关。
+            # 如果进Max，那么先进入Min -> pushpop后出来的值一定是Min当中最小的，也就是处于相对最中位的值。
     def addNum(self, num):
         if len(self.small) == len(self.large):
             heappush(self.large, -heappushpop(self.small, -num))

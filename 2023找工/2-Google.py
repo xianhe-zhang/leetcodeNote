@@ -3,9 +3,6 @@
 
 
 
-
-
-
 # 3 - Longest Substring Without Repeating Characters
 # 3种解法
     # 3.1 正常counter/defaultdict 记录 + 正常更新
@@ -372,124 +369,486 @@ class Solution:
 # current_width = len(heights) - left_boundary - 1
 
 
-# 329
-# 715
-# 1146
-# 818
+# 329. Longest Increasing Path in a Matrix
+class Solution:
+    def longestIncreasingPath(self, matrix: List[List[int]]) -> int:
+        m, n = len(matrix), len(matrix[0])
+        visited = [[0]* n for _ in range(m)] 
+
+        # 如果不是DAG，既不是有向图，是不能够用memorization的
+        def dfs(x, y):
+            if visited[x][y]: return visited[x][y] # 如果是0就是没有经历过！
+            for nx, ny in ((x+1, y),(x-1, y),(x, y-1),(x, y+1)):
+                if 0 <= nx < m and 0 <= ny < n and matrix[nx][ny] > matrix[x][y]:
+                    visited[x][y] = max(visited[x][y], dfs(nx, ny)) # 不能在max()里存放+1 这样多次相同层的遍历会将+1重复计算
+       
+            # 加的本身的；也就意味着每个cell我们只会经历这行代码一次。
+            # 如果不是第一次visit呢？会直接return visited[x][y]
+            # 那如果这个cell是如何能够拥有2以上的值的呢？在
+            visited[x][y] += 1 # 这里有点意思哦～
+            return visited[x][y]    
+
+        ans = 0
+        for i in range(m):
+            for j in range(n):
+                ans = max(ans, dfs(i, j))
+
+        return ans
+
+
+
+# 715 Range Module
+class Node:
+    __slots__ = ['left', 'right', 'add', 'v']
+
+    def __init__(self):
+        self.left = None
+        self.right = None
+        self.add = 0
+        self.v = False
+
+
+class SegmentTree:
+    __slots__ = ['root']
+
+    def __init__(self):
+        self.root = Node()
+
+    def modify(self, left, right, v, l=1, r=int(1e9), node=None):
+        if node is None:
+            node = self.root
+        if l >= left and r <= right:
+            if v == 1:
+                node.add = 1
+                node.v = True
+            else:
+                node.add = -1
+                node.v = False
+            return
+        self.pushdown(node)
+        mid = (l + r) >> 1
+        if left <= mid:
+            self.modify(left, right, v, l, mid, node.left)
+        if right > mid:
+            self.modify(left, right, v, mid + 1, r, node.right)
+        self.pushup(node)
+
+    def query(self, left, right, l=1, r=int(1e9), node=None):
+        if node is None:
+            node = self.root
+        if l >= left and r <= right:
+            return node.v
+        self.pushdown(node)
+        mid = (l + r) >> 1
+        v = True
+        if left <= mid:
+            v = v and self.query(left, right, l, mid, node.left)
+        if right > mid:
+            v = v and self.query(left, right, mid + 1, r, node.right)
+        return v
+
+    def pushup(self, node):
+        node.v = bool(node.left and node.left.v and node.right and node.right.v)
+
+    def pushdown(self, node):
+        if node.left is None:
+            node.left = Node()
+        if node.right is None:
+            node.right = Node()
+        if node.add:
+            node.left.add = node.right.add = node.add
+            node.left.v = node.add == 1
+            node.right.v = node.add == 1
+            node.add = 0
+
+
+class RangeModule: 
+    def __init__(self):
+        self.tree = SegmentTree()
+
+    def addRange(self, left: int, right: int) -> None:
+        self.tree.modify(left, right - 1, 1)
+
+    def queryRange(self, left: int, right: int) -> bool:
+        return self.tree.query(left, right - 1)
+
+    def removeRange(self, left: int, right: int) -> None:
+        self.tree.modify(left, right - 1, -1)
+
+# 1146 1146. Snapshot Array
+import bisect
+class SnapshotArray:
+    def __init__(self, length: int):
+        self.id = 0
+        self.history_records = [[[0, 0]] for _ in range(length)]
+        
+    def set(self, index: int, val: int) -> None:
+        self.history_records[index].append([self.id, val])
+
+    def snap(self) -> int:
+        self.id += 1
+        return self.id - 1
+
+    def get(self, index: int, snap_id: int) -> int:
+        snap_index = bisect.bisect_right(self.history_records[index], [snap_id, 10 ** 9]) # 这种排序技巧在二分很重要！
+        return self.history_records[index][snap_index - 1][1]
+
+
+# 818. Race Car
+# 这是medium的解法。情况3是hard的tip
+class Solution:
+    def racecar(self, target: int) -> int:
+        #1. Initialize double ended queue as 0 moves, 0 position, +1 velocity
+        queue = collections.deque([(0, 0, 1)])
+        while queue:
+            # (moves) moves, (pos) position, (vel) velocity)
+            moves, pos, vel = queue.popleft()
+
+            if pos == target:
+                return moves
+            
+            #2. Always consider moving the car in the direction it is already going
+            queue.append((moves + 1, pos + vel, 2 * vel))
+            
+            #3. Also consider changing direction only when next move will driving away the target.
+            if (pos + vel > target and vel > 0) or (pos + vel < target and vel < 0):
+                queue.append((moves + 1, pos, -vel / abs(vel)))
+
+
+
 # 729
-# 539
-# 777
-# 419
-# 489
-# 778
+"""
+class MyCalendar {
+private:
+    set<pair<int, int>> calendar; // set类似python，但有序。
+public:
+    MyCalendar() {
+    }
+    
+    // 每一次都会比较两个边界。
+    bool book(int start, int end) {
+        const pair<int, int> event{start, end};
+        
+        const auto nextEvent = calendar.lower_bound(event); // 第一个不小于event的
+
+        // begin()/end()获得都是迭代器，指向元素的。
+        // nextEvent是不小于的
+        // 如果是没有的话，那么会跳过；lower_bound返回的也是指向元素的迭代器。
+        // 如果event太大，会返回end；不等于end意味着 -> event一定在之前。
+            // 在之前分两种情况：一种在范围内，一种小于范围
+            // 范围内：指向第一个>=event的，只用两者不重叠就行。因为先根据first排列，因此nextEvent一定>=event，因此，我们只用比较event.second和next的first就行。
+        if(nextEvent != calendar.end() && nextEvent->first < end) {
+            return false;
+        }
+
+        if(nextEvent != calendar.begin()) {
+            
+            const auto preEvent = prev(nextEvent);
+            if(preEvent->second > start) {
+                return false;
+            }
+        }
+
+        calendar.insert(event);
+          
+        return true;
+    }
+};
+
+
+// 729. My Calendar I
+
+class MyCalendar {
+
+    public MyCalendar() {
+    }
+    
+    public boolean book(int start, int end) {
+        if (query(root, 0, N, start, end - 1) != 0) return false;
+        update(root, 0, N, start, end - 1, 1);
+        return true;
+    }
+    // *************** 下面是模版 ***************
+    class Node {
+        Node left, right;
+        // 当前节点值，以及懒惰标记的值
+        int val, add;
+    }
+    private int N = (int) 1e9;
+    private Node root = new Node();
+    public void update(Node node, int start, int end, int l_boundary, int r_boundary, int val) {
+        if (l_boundary <= start && end <= r_boundary) {
+            // val和add的值都很灵活，只要不是0.
+            node.val += val;
+            node.add += val;
+            return ;
+        }
+        pushDown(node);
+        int mid = (start + end) >> 1;
+        if (l_boundary <= mid) update(node.left, start, mid, l_boundary, r_boundary, val);
+        if (r_boundary > mid) update(node.right, mid + 1, end, l_boundary, r_boundary, val);
+        pushUp(node);
+    }
+    public int query(Node node, int start, int end, int l_boundary, int r_boundary) {
+        if (l_boundary <= start && end <= r_boundary) return node.val;
+        pushDown(node);
+        int mid = (start + end) >> 1, ans = 0;
+        if (l_boundary <= mid) ans = query(node.left, start, mid, l_boundary, r_boundary);
+        if (r_boundary > mid) ans = Math.max(ans, query(node.right, mid + 1, end, l_boundary, r_boundary));
+        return ans;
+    }
+    private void pushUp(Node node) {
+        // push其实也是where存放你的节点逻辑的，可以是区间和，可以是最大值，也可以是是否booked.
+        // 每个节点存的是当前区间的最大值 
+        node.val = Math.max(node.left.val, node.right.val);
+    }
+    private void pushDown(Node node) {
+        // 无论query还是update/modify，都会pushdown更新。
+        // 线段树是只有查询和更新两个操作，如果碰到细分的区间，就会pushDown
+        // add的值可以
+        if (node.left == null) node.left = new Node();
+        if (node.right == null) node.right = new Node();
+        if (node.add == 0) return ;
+        node.left.val += node.add;
+        node.right.val += node.add;
+        node.left.add += node.add;
+        node.right.add += node.add;
+        node.add = 0;
+    }
+}
+"""
+
+# 539 - 这题纯烦
+class Solution:
+    def findMinDifference(self, timePoints: List[str]) -> int:
+        timePoints.sort()
+        ans = float('inf')
+        for i in range(len(timePoints)-1):
+            ans = min(ans, self.cal(timePoints[i], timePoints[i+1]))
+
+
+        t1 = timePoints[-1]
+        t2_first, t2_second = timePoints[0].split(":")
+        t2 = str(int(t2_first) +  24) + ":" +t2_second
+        
+        ans = min(ans, self.cal(t1, t2))
+        return ans
+
+
+    def cal(self, t1, t2) -> int :
+        t1_h, t1_m = map(lambda x: int(x),t1.split(':'))
+        t2_h, t2_m = map(lambda x: int(x),t2.split(':'))
+        diff = (t2_h-t1_h)*60 + t2_m-t1_m
+        print(diff)
+        return diff
+
+
+"""
+// 419. battleships in a board
+// 这道题的难点在于如何判断战舰。
+// 1.我们只用搜索战舰的开头。因为它是垂直/水平排列的。但是如何找到开头是很困难的。
+// 2.首先判断左边和右边有没有‘x’，有的话就不是开头，可以直接跳过。
+// 3.题目中的战舰一定是valid的，因此只会有横纵，因此只用找开头就行了。
+// 4.跳过前两个if，意味着x要么是新的，要么就是首行。
+class Solution {
+    public int countBattleships(char[][] board) {
+        int m = board.length, n = board[0].length;
+        int ans = 0;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i > 0 && board[i-1][j] == 'X') continue;
+                if (j > 0 && board[i][j-1] == 'X') continue;
+                if (board[i][j] == 'X') ans++;
+            }
+        }
+        return ans;
+    }
+}"""
+
+# 489. Robot Room Cleaner
+
+class Solution:
+    def cleanRoom(self, robot):
+        
+        # 退回到上一个格子with same direction
+        def go_back(): 
+            robot.turnRight()
+            robot.turnRight()
+            robot.move()
+            robot.turnRight()
+            robot.turnRight()
+        
+        def backtrack(cell=(0,0), d=0):
+            visited.add(cell)
+            robot.clean()
+
+            for i in range(4):
+                new_d = (d+i) % 4
+                new_cell = (cell[0] + direcs[new_d][0], cell[1] + direcs[new_d][1])
+                if not new_cell in visited and robot.move():
+                    backtrack(new_cell, new_d)
+                    go_back()
+                
+                robot.turnRight()
+        # 涉及到方向的话, turnRight, 方向遍历也要根据clockwise.
+        direcs = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+        visited = set()
+        backtrack()
+
+
+# 778 - Swim in the rising water
+class Solution:
+    def swimInWater(self, grid: List[List[int]]) -> int:
+        # level, x, y
+        hp = [[grid[0][0],0,0]]
+        ans = grid[0][0]
+        visited = set((0,0))
+
+        while hp:
+            level, x, y = heapq.heappop(hp)
+            ans = max(ans, level)
+            if x == len(grid)-1 and y == len(grid[0])-1: break
+            for nx, ny in ((x+1,y),(x,y+1),(x-1,y),(x,y-1)):
+                if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and (nx,ny) not in visited:
+                    heapq.heappush(hp, [grid[nx][ny],nx,ny])
+                    visited.add((nx,ny))
+        return ans
+        
+
+
+        
+    
 # 2096
 # 1101
 # 2158
+    
+
+    
 # 2172
 # 2115
+
 # 2034
 # 833
 # 792
 # 562
 # 1606
+
 # 2162
 # 2421
 # 552
 # 1105
 # 1937
+
 # 1048
 # 900
 # 1996
 # 366
 # 1387
+
 # 2242
 # 2013
 # 1554
 # 2135
 # 1055
 # 418
+
 # 2416
 # 2018
 # 2128
 # 2178
 # 843
+
 # 332
 # 2345
 # 1857
 # 2313
 # 2104
+
 # 2277
 # 581
 # 2254
 # 33
 # 2459
 # 946
+
 # 2510
 # 1020
 # 1254
 # 2371
 # 13
 # 4
+
 # 394
 # 875
 # 759
 # 402
 # 1360
+
 # 929
 # 975
 # 482
 # 904
 # 3
+
 # 11
 # 15
 # 31
 # 43
 # 48
 # 55
+
 # 66
 # 76
 # 158
 # 159
 # 163
 # 681
+
 # 809
 # 849
 # 42
 # 215
 # 844
 # 857
+
 # 973
 # 2
 # 138
 # 127
 # 210
+
 # 222
 # 399
 # 2829
 # 753
 # 947
+
 # 951
 # 425
 # 247
 # 351
 # 17
 # 22
+
 # 34
 # 315
 # 852
 # 5
 # 152
+
 # 322
 # 518
 # 410
 # 146
 # 155
+
 # 297
 # 380
 # 642
 # 7
 # 135
 # 205
+
 # 246
 # 299
 # 308

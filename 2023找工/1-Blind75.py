@@ -186,7 +186,10 @@ class Solution:
 class Solution:
     def threeSum(self, nums: List[int]) -> List[List[int]]:
         res, dups = set(), set()
-        seen = {} # 聪明，放的见过的元素，value存放的是i，这样就知道这个key是不是i这种情况下的。比如之前0的时候，就已经见过x，那么之后发现我们缺一个x，那么此时已经skip过0了，如果不用i进行标识，那么我们会错误添加进res中。（这一段话说的有点乱，看不出来就别看了）
+        # 聪明，放的见过的元素，value存放的是i，这样就知道这个key是不是i这种情况下的。
+        # 比如之前0的时候，就已经见过x，那么之后发现我们缺一个x，那么此时已经skip过0了，
+        # 如果不用i进行标识，那么我们会错误添加进res中。（这一段话说的有点乱，看不出来就别看了）
+        seen = {} 
         for i, val1 in enumerate(nums):
             if val1 not in dups: # 跳过重复的
                 dups.add(val1)
@@ -243,6 +246,7 @@ class Solution:
 
         for a in range(1, amount+1):
             for c in coins:
+
                 if a >= c and dp[a-c] != -1:
                     dp[a] = min(dp[a-c] + 1,dp[a])
 

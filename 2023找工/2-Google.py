@@ -718,22 +718,416 @@ class Solution:
 
         
     
-# 2096
-# 1101
-# 2158
-    
 
+# 2096. Step-By-Step Directions From a Binary Tree Node to Another
+# 明眼一看前序遍历；binaryTree，没有什么特殊的结构；
+# 肯定需要有signal表示是否找到。
+# 找到nearest parent root；然后左右开找；✅
+class Solution:
+    def getDirections(self, root: Optional[TreeNode], startValue: int, destValue: int) -> str:
+        self.node = root
+        start_path, dest_path = [],[]
+        self.findIntersectNode(root, startValue, destValue)
+        self.getPath(self.node, startValue, start_path) 
+        print(start_path)
+        print(dest_path)
+        self.getPath(self.node, destValue, dest_path)
+
+        print(f'before sp: ${start_path}')
+        start_path = "U" * len(start_path)
+        print(f'after sp: ${start_path}')
+        print(f'before ep: ${dest_path}')
+        dest_path = "".join(dest_path[::-1])
+        print(f'after ep: ${dest_path}')
+        return start_path+dest_path
+
+    def getPath(self, node, val, path):
+        if not node: return False 
+        if node.val == val: return True
+
+        if self.getPath(node.left, val, path):
+            path.append('L')
+            return True
+        if self.getPath(node.right, val, path):
+            path.append('R')
+            return True        
+        return False
+
+
+    def findIntersectNode(self, cur, v1, v2):
+        if not cur: return 0
+        left = self.findIntersectNode(cur.left, v1, v2)
+        right = self.findIntersectNode(cur.right, v1, v2)
+        mid = cur.val == v1 or cur.val == v2
+        tt = left+right+mid
+        if tt == 2: self.node = cur
+        return 1 if tt == 1 else 0 
+
+""" Take away:
+1. when searching lowest common ancestor, you need the signal, and outter var to record the current node. what can be a signal? you need to see 3 factors->left, right, cur(mid). return 1 if tt ==1 else 0 can help us to avoid re-updateing in parent-series roots.
+2. when getting path, actually DFS is used here. you also need a signal to determine if outter var should be updated. There if dfs(): return true will be a usual solution.
+"""
+        
+
+# 1101. The Earliest Moment When Everyone Become Friends
+
+class Solution:
+    def earliestAcq(self, logs: List[List[int]], n: int) -> int:
+        
+        friends = list(range(n))
+        # ✨这个方法可以看是否所有元素都已经被遍历，并且都已经归为一组！
+        seen_num = n
+        def union(x, y):
+            rx, ry = find(x), find(y)
+            if rx != ry:
+                friends[rx] = ry
+                nonlocal seen_num
+                seen_num -= 1
+            
+        def find(x):
+            if friends[x] != x:
+                return find(friends[x])
+            return friends[x]
+           
+        logs.sort()
+
+        for t, x, y in logs:
+            union(x, y)
+
+            if seen_num == 1:
+                return t
+
+        return -1
+
+
+
+# 2158. Amount of New Area Painted Each Day
+from sortedcontainers import SortedList
+# AVL/Red-Black Tree  -> auto-balanced tree
+
+class Solution:
+    def amountPainted(self, paint: List[List[int]]) -> List[int]:
+        records = []
+        max_pos = 0
+
+        for i, [start,end] in enumerate(paint):
+            # use 1/-1 to distinguish type
+            records.append((start, i, 1))   
+            records.append((end, i, -1))
+            max_pos = max(max_pos, end) # max_pos是右侧的最远端。
+
+
+        # records里放的是什么？-> 起点/终点 
+        records.sort()
+
+
+        # sweep across all position
+        ans = [0] * len(paint) 
+        indexes = SortedList() # same as set() in C++ 存放的是index，按照index大小自动排序。
+        i = 0
+        
+        # 每个for循环看每一个格子。
+        for pos in range(max_pos+1):
+            
+            # 我们的records有几个特性：首先是有序的，毕竟sort过了，是按照节点的先后顺序。
+            # 结合records[i][0] == pos 可以推导出 -> while的逻辑只会适用于当前pos存在于records中的，也就是有节点的，有可能0～n个节点，都会进行处理。。
+            while i < len(records) and records[i][0] == pos:
+                pos, index, tp = records[i]
+                # indexes里面存的是所有在当前pos作用的paint的startPoint，但是indexes[0]是第一个，也就是唯一valid的，也就是当前这个pos最终算到indexes头上。
+                if tp == 1:
+                    indexes.add(index)
+                else:
+                    indexes.remove(index)
+                i += 1
+
+            # indexes[0]就是valid paint的index
+            if indexes:
+                ans[indexes[0]] += 1
+
+        return ans
+
+        
+# 2158. Amount of New Area Painted Each Day
+from sortedcontainers import SortedList
+# AVL/Red-Black Tree  -> auto-balanced tree
+
+class Solution:
+    def amountPainted(self, paint: List[List[int]]) -> List[int]:
+        records = []
+        
+
+        for i, [start,end] in enumerate(paint):
+            # use 1/-1 to distinguish type
+            records.append((start, i, 1))   
+            records.append((end, i, -1))
+
+        # records里放的是什么？-> 起点/终点 
+        records.sort()
+
+
+        # sweep across all position
+        ans = [0] * len(paint) 
+        indexes = SortedList() # same as set() in C++ 存放的是index，按照index大小自动排序。
+        last_pos = 0
+        
+        # for循环看records
+        for pos, index, tp in records:
+            if indexes:
+                ans[indexes[0]] += pos-last_pos
+            
+            last_pos = pos
+            if tp == 1:
+                indexes.add(index)
+            else:
+                indexes.remove(index)
+
+        return ans
     
-# 2172
+class SegmentTree:
+    def __init__(self, size):
+        self.size = size
+        self.tree = [0] * (4 * size)
+        self.lazy = [0] * (4 * size)
+
+    def update_range(self, v, tl, tr, l, r, addend):
+        if self.lazy[v] != 0:
+            self.tree[v] += self.lazy[v] * (tr - tl + 1)
+            if tl != tr:
+                self.lazy[v * 2] += self.lazy[v]
+                self.lazy[v * 2 + 1] += self.lazy[v]
+            self.lazy[v] = 0
+
+        if l > r:
+            return
+
+        if l == tl and r == tr:
+            self.tree[v] += addend * (tr - tl + 1)
+            if tl != tr:
+                self.lazy[v * 2] += addend
+                self.lazy[v * 2 + 1] += addend
+            return
+
+        tm = (tl + tr) // 2
+        self.update_range(v * 2, tl, tm, l, min(r, tm), addend)
+        self.update_range(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r, addend)
+        self.tree[v] = self.tree[v * 2] + self.tree[v * 2 + 1]
+
+    def query_range(self, v, tl, tr, l, r):
+        if l > r:
+            return 0
+
+        if self.lazy[v] != 0:
+            self.tree[v] += self.lazy[v] * (tr - tl + 1)
+            if tl != tr:
+                self.lazy[v * 2] += self.lazy[v]
+                self.lazy[v * 2 + 1] += self.lazy[v]
+            self.lazy[v] = 0
+
+        if l == tl and r == tr:
+            return self.tree[v]
+
+        tm = (tl + tr) // 2
+        return self.query_range(v * 2, tl, tm, l, min(r, tm)) + self.query_range(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r)
+
+class Solution:
+    def amountPainted(self, paint):
+        MAX_SIZE = 50005
+        seg_tree = SegmentTree(MAX_SIZE)
+        ans = []
+
+        for start, end in paint:
+            end -= 1  # Adjust to 0-indexed
+            painted = end - start + 1 - seg_tree.query_range(1, 0, MAX_SIZE - 1, start, end)
+            ans.append(painted)
+            seg_tree.update_range(1, 0, MAX_SIZE - 1, start, end, 1)
+
+        return ans
+
+
+# 2172. Maximum AND Sum of Array
+# 第一个循环是用来确定和遍历所有可能的状态，而第二个循环是用来进行状态转移，即考虑如何从当前状态通过放置一个新的数字到达新状态，并计算这种转移所能获得的最大 AND 和。这两个循环共同构成了解决这个动态规划问题的完整框架。
+class Solution:
+    def maximumANDSum(self, nums: List[int], numSlots: int) -> int:    
+        f = [0] * (1 << (numSlots * 2))
+        # 这里的i有什么作用？它的取值范围是0~2**(numSlots*2)，因此每个bin(i)都可以代表了一种状态
+        for i, fi in enumerate(f):
+            c = i.bit_count() # 这里的c是看bin(i)里有多少个slot被占用了，有元素了。
+            # 如果上面的c也可以当index，表示已经有多少个元素被放入了。
+            if c >= len(nums): continue # 如果占用的格子超过我们最大元素，就没必要继续了。
+
+            # 遍历所有slot
+            for j in range(numSlots * 2):
+                # 遍历j这个slot在状态i下是否为空；如果为空，就是可以塞进去。
+                if (i & (1 << j)) == 0: 
+                    s = i | (1 << j) # new一个新的state出来，就是在原来状态i上，将j位的也改为1 -> 表示新状态。
+                    f[s] = max(f[s], fi + ((j // 2 + 1) & nums[c])) #
+        return max(f)
+
+
+# 这题的逻辑和难点需要值得讲讲：
+# 0. 题意是最多两个放在一组，但是每个元素最后都是和当前组的index进行AND运算。因此其实可以看作是在一个单调坐标轴上Insert
+# 1. 首先f，其len == 选0～选所有数字的所有状态的可能性。
+# 2. f的index(i)翻译成bin()可以当作当前状态，1为被占用了，0为被占用；
+# 3. len(i)是所有槽，c是当前状态i下的1的数量 == 已经放了多少元素，nums[c]就是我们要放的下一个元素，当我们选择哪个number放入我们的考量的时候，参考标准是我们当前放入了几个元素，这些元素就像是stack堆叠在一起的。
+
+
+
 # 2115
+class Solution:
+    def findAllRecipes(self, recipes: List[str], ingredients: List[List[str]], supplies: List[str]) -> List[str]:
+        
+        records = collections.defaultdict(set)
+        inDegree = collections.defaultdict(int)
+        supplies = set(supplies)
 
-# 2034
-# 833
-# 792
-# 562
-# 1606
+        for i in range(len(recipes)):
+            inputs, output = ingredients[i], recipes[i]
+            for single_input in inputs:
+                if single_input not in supplies:
+                    inDegree[output] += 1
+                    records[single_input].add(output)
 
-# 2162
+        queue = []
+        res = []
+        for r in recipes: 
+            if not inDegree[r]:
+                queue.append(r)
+            
+        
+        while queue:
+            cur = queue.pop(0)
+            res.append(cur)
+            for nex in records[cur]:
+                inDegree[nex] -= 1
+                if inDegree[nex] == 0:
+                    queue.append(nex)
+
+        return res
+
+# 2034.Stock Price Fluctuation 
+# 跟我的大体思路差不多，是需要用到heap的，那如何确保heap中的max/min极值是up to date的？ -> 只需要在pop的时候与最近储存的hashmap检查就可以了。
+class StockPrice:
+    def __init__(self):
+        self.latest_time = 0
+        # Store price of each stock at each timestamp.
+        self.timestamp_price_map = {}
+        
+        # Store stock prices in sorted order to get min and max price.
+        self.max_heap = []
+        self.min_heap = []
+
+    def update(self, timestamp: int, price: int) -> None:
+        # Update latestTime to latest timestamp.
+        self.timestamp_price_map[timestamp] = price
+        self.latest_time = max(self.latest_time, timestamp)
+
+        # Add latest price for timestamp.
+        heappush(self.min_heap, (price, timestamp))
+        heappush(self.max_heap, (-price, timestamp))
+
+    def current(self) -> int:
+        # Return latest price of the stock.
+        return self.timestamp_price_map[self.latest_time]
+
+    def maximum(self) -> int:
+        price, timestamp = self.max_heap[0]
+
+        # Pop pairs from heap with the price doesn't match with hashmap.
+        while -price != self.timestamp_price_map[timestamp]:
+            heappop(self.max_heap)
+            price, timestamp = self.max_heap[0]
+            
+        return -price
+
+    def minimum(self) -> int:
+        price, timestamp = self.min_heap[0]
+
+        # Pop pairs from heap with the price doesn't match with hashmap.
+        while price != self.timestamp_price_map[timestamp]:
+            heappop(self.min_heap)
+            price, timestamp = self.min_heap[0]
+            
+        return price
+
+
+
+
+# 833. Find And Replace in String
+class Solution:
+    # # 1. find the valid sources
+    # # 2. exclude invalid targets
+    # # 3. transform
+
+
+    def findReplaceString(self, S, indexes, sources, targets):
+        for i, s, t in sorted(zip(indexes, sources, targets), reverse=True):
+            S = S[:i] + t + S[i + len(s):] if S[i:i + len(s)] == s else S
+            # 用法解读：
+            # 1. 如果没有满足if->其实就是if S==S: 就是跳过了。
+            # 2. 如果满足if -> 把s[i:i+len(s)]更换掉
+            # 3. 倒序Reverse避免了因为替换造成的index影响。
+        return S
+
+# 但是这种方法没有处理overlap
+    
+    
+
+# 792. Number of Matching Subsequences
+# 只会暴力解（Not accepted）
+# Next pointer:  🌟这种方法我第一次见，有点类似OS的多线程的shared var用法。
+#   1. 因为s太大了，所以只要遍历它一次就好
+class Solution:
+    def numMatchingSubseq(self, s: str, words: List[str]) -> int:
+        ans = 0
+        heads = [[] for _ in range(26)]
+        for word in words:
+            it = iter(word)
+            heads[ord(next(it)) - ord('a')].append(it) # it是迭代器，这一行的目的是将迭代器添加到每一个首字母的位置。
+
+        for letter in s:
+            # 当前letter的index
+            letter_index = ord(letter) - ord('a')
+            old_bucket = heads[letter_index] # 本质上是list，或者里面有没有iterator 
+            heads[letter_index] = [] # 并且清空。
+
+            while old_bucket: # 如果当前有可能的字符串的话，我们来一个个看。
+                it = old_bucket.pop() 
+                nxt = next(it, None)
+                # 如果有的话nxt的话，我们抵消了当前的letter把剩下的继续放入heads中
+                if nxt: 
+                    heads[ord(nxt) - ord('a')].append(it)
+                else:
+                    # 如果没有nxt意味着该word序列已经全部消除了。可以答案+1了。
+                    ans += 1
+
+        return ans
+    
+
+# 562. Longest Line of Consecutive One in Matrix
+# 这题的dp还是挺简单的，3D-array解题，每个特定的index照顾了一种情况。
+# 也不用担心各个情况的互相影响。
+class Solution:
+    def longestLine(self, mat: List[List[int]]) -> int:
+        dp = [[[0,0,0,0] for _ in range(len(mat[0]))] for i in range(len(mat))]
+        max_ones = 0
+        for i in range(len(mat)):
+            for j in range(len(mat[0])):
+                if mat[i][j] == 1:
+                    dp[i][j][0] = 1 + (dp[i][j-1][0] if j > 0 else 0)  # 水平
+                    dp[i][j][1] = 1 + (dp[i-1][j][1] if i > 0 else 0)  # 垂直
+                    dp[i][j][2] = 1 + (dp[i-1][j-1][2] if i > 0 and j > 0 else 0)  # 对角线
+                    dp[i][j][3] = 1 + (dp[i-1][j+1][3] if i > 0 and j < len(mat[0]) - 1 else 0)  # 反对角线
+                    max_ones = max(max_ones, dp[i][j][0], dp[i][j][1], dp[i][j][2], dp[i][j][3])
+
+        return max_ones
+
+
+# 1606 
+# 2162 - 没意思
+    
+    
+
+
 # 2421
 # 552
 # 1105

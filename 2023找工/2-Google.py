@@ -1101,7 +1101,7 @@ class Solution:
                     ans += 1
 
         return ans
-    
+
 
 # 562. Longest Line of Consecutive One in Matrix
 # 这题的dp还是挺简单的，3D-array解题，每个特定的index照顾了一种情况。
@@ -1121,11 +1121,89 @@ class Solution:
 
         return max_ones
 
+# 1606. Find Servers That Handled Most Number of Requests
+# k servers -> can only handle one(no concurrent)
+from sortedcontainers import SortedList
+class Solution:
+    def busiestServers(self, k: int, arrival: List[int], load: List[int]) -> List[int]:
+        count = [0] * k
 
-# 1606 
+        busy, free = [], SortedList(list(range(k))) # 这个写法我写不出来的主要原因是不清楚这个sortedList这个数据结构。
+
+        for i, start in enumerate(arrival):
+
+            # 🌟在去决定选择哪个server的时候，先根据current条件把可以选的再次放进来。
+            # busy是sortedList所以可以这么用。
+            while busy and busy[0][0] <= start:
+                _, server_id = heapq.heappop(busy)
+                free.add(server_id)
+
+            if free:
+                index = free.bisect_left(i%k) # 应该找i%k这个index，如果有的话
+                busy_id = free[index] if index < len(free) else free[0] # 如果<len()意味着当前有发现大于index的server。
+                free.remove(busy_id)
+                heapq.heappush(busy, ((start + load[i]), busy_id))
+                count[busy_id] += 1
+        max_job = max(count)
+        return [i for i ,n in enumerate(count) if n == max_job]
+
+# biesct_left, bisect_right是处理的插入值的边界。
+# 下面是如何使用两个heap的方法。priority queue
+class Solution:
+    def busiestServers(self, k: int, arrival: List[int], load: List[int]) -> List[int]:
+        count = [0] * k
+        
+        busy, free = [], list(range(k))
+
+        for i, start in enumerate(arrival):
+            # 一样的，一个pq中存放所有busy的，一定不满足当亲啊的
+            while busy and busy[0][0] <= start:
+                _, server_id = heapq.heappop(busy)
+                # 用两个pq的难点在于如何通过数学的方法找到next available的server_id
+                # 
+                heapq.heappush(free, i + (server_id - i) % k)
+
+            if free:
+                busy_id = heapq.heappop(free) % k
+                heapq.heappush(busy, (start + load[i], busy_id))
+                count[busy_id] += 1
+        
+        max_job = max(count)
+        return [i for i, n in enumerate(count) if n == max_job]
+# 2402. Meeting Rooms III
+# 这题如果你每次找最小的endtime是不可以的，因为有些endTime大，roomNumber小，但仍然满足题意，你会忽略这种情况
+# 因此每次遇到新的会议的时候，你需要得到所有可用的meeting room，因此需要一个数据结构来帮助你。
+class Solution:
+    def mostBooked(self, n: int, meetings: List[List[int]]) -> int:
+        meetings.sort()
+        roomInUse = []
+        roomSpare = [i for i in range(n)]
+        record = collections.defaultdict(int)
+
+        for s, e in meetings:
+            # 1/看看有没有用完的会议室
+            while roomInUse and s >= roomInUse[0][0]:
+                time, room = heapq.heappop(roomInUse)
+                heapq.heappush(roomSpare, room)
+
+            # 1/有空房
+            if roomSpare:
+                room = heapq.heappop(roomSpare)
+                heapq.heappush(roomInUse, [e, room])
+            # 2/没空房
+            else:
+                nextTime, room = heappop(roomInUse)
+                heapq.heappush(roomInUse, [nextTime+e-s, room])
+            record[room] += 1
+        print(f"record: {record}")
+        return sorted(record.items(), key=lambda x: (-x[1], x[0]))[0][0]
+        # 最后找使用最多room的也可以指使用一个单一的list
+        # res = [0] * n           # 每个room用过多少次
+        # return res.index(max(res)) # 
+        
+
 # 2162 - 没意思
-    
-    
+
 
 
 # 2421

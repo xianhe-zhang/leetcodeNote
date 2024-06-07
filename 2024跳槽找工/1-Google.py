@@ -1550,8 +1550,23 @@ def differByOne(self, dict: List[str]) -> bool:
         base = 26 * base % MOD
     return False        
 
+# 2135. Count Words Obtained After Adding a Letter 这题不难，因为只有一次操作。
+def wordCount(self, startWords: List[str], targetWords: List[str]) -> int:
+    word_map = {} # 存放有序的key
+    for w in startWords:
+        key = tuple(sorted(list(w)))
+        word_map[key] = word_map.get(key, 0) + 1
+
+    count = 0
+    for w in targetWords:
+        wl = sorted(list(w))
+        for i in range(len(wl)):
+            if (tuple(wl[:i]+wl[i+1:])) in word_map:
+                count += 1 
+                break
+    return count
 # 2242
-# 2135
+
 # 1055
 # 418
 

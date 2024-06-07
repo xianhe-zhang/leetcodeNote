@@ -1329,25 +1329,24 @@ class Solution:
     
 # 这道题如果是一维DP的很简单，但是有一个trick：什么时候更换新的层？是往下去看？还是往前看？
 # 这一题的难点在于如何划分层级？答: 通过向前回溯；没选取一本书的时候，往前累加看看能放最远的是多少？同时记录最高的。 -> 那么dp只需要判断：dp要么不变，之前每个h都去看，要是发现有更小的，就用更小的。
-class Solution:
-    def minHeightShelves(self, books: List[List[int]], shelf_width: int) -> int:
-        n = len(books)
-        dp = [float('inf')] * (n+1)
-        dp[0] = 0
-        for i in range(n):
-            # 这里省略了取books[i]的操作，直接放进了下面的while-loop中。
-            h =0
-            j = i
-            temp_width = 0
-            while j >= 0:
-                temp_width += books[j][0]
-                if temp_width > shelf_width:
-                    break
-                h = max(h, books[j][1])
-                dp[i+1] = min(dp[i+1], dp[j] + h)
-                j -= 1
+def minHeightShelves(self, books: List[List[int]], shelf_width: int) -> int:
+    n = len(books)
+    dp = [float('inf')] * (n+1)
+    dp[0] = 0
+    for i in range(n):
+        # 这里省略了取books[i]的操作，直接放进了下面的while-loop中。
+        h =0
+        j = i
+        temp_width = 0
+        while j >= 0:
+            temp_width += books[j][0]
+            if temp_width > shelf_width:
+                break
+            h = max(h, books[j][1])
+            dp[i+1] = min(dp[i+1], dp[j] + h)
+            j -= 1
 
-        return dp[-1]
+    return dp[-1]
 
 
 # 1937 Maximum Number of Points with Cost
@@ -1521,10 +1520,37 @@ class DetectSquares:
             count+=(self.points[Y+d][x]*self.points[Y+d][X]*self.points[Y][x]) # 上方的square
         return count
             
-        
+# 1554. Strings Differ by One Character
+# String Hash的用法
+def differByOne(self, dict: List[str]) -> bool:
+    n, m = len(dict), len(dict[0])
+    hashes = [0] * n #存放的是各个位置的hash value；
+    MOD = 10**11 + 7
+    
+
+    # hashValue <- 2 也是本题算法的核心。有点类似26进制。
+    for i in range(n):
+        for j in range(m):
+            hashes[i] = (26 * hashes[i] + (ord(dict[i][j]) - ord('a'))) % MOD
+    
+
+    base = 1
+    # for: 按照字符
+    for j in range(m - 1, -1, -1):        
+        seen = set()
+        # for: 去看dict里面每一个string；
+        for i in range(n):
+            new_h = (hashes[i] - base * (ord(dict[i][j]) - ord('a'))) % MOD
+            if new_h in seen:
+                return True
+            seen.add(new_h)
+            # 🌟why works? -> 匹配的逻辑：
+            # hashes[i]里永远存的所有字符贡献过后的hash value. sub-for每一次循环做的就是将当前的i的值的贡献从总贡献中减去。然后将这个结果存入seen中。
+            # 而且这一题有一很强的前提条件，就是一个字母不同的string，其他都是一样的，因此可以用hashvalue来做。
+        base = 26 * base % MOD
+    return False        
 
 # 2242
-# 1554
 # 2135
 # 1055
 # 418

@@ -1565,11 +1565,32 @@ def wordCount(self, startWords: List[str], targetWords: List[str]) -> int:
                 count += 1 
                 break
     return count
-# 2242
 
-# 1055
+
+# 1055. Shortest Way to Form String
+def shortestWay(self, s: str, t: str) -> int:
+    # detect invalid input:
+    ss, st = set(list(s)), set(list(t))
+    if ss & st != st : return -1
+
+    # to count the minimum number
+    n, m = len(s), len(t)
+    t_ptr = 0
+    def findNext():
+        nonlocal t_ptr
+        for i in range(n):
+            if s[i] == t[t_ptr]:
+                t_ptr += 1
+                if t_ptr == m: return 
+    
+    count = 0
+    while t_ptr < m:
+        findNext()
+        count += 1
+    return count
+
 # 418
-
+# 2242
 # 2416
 # 2018
 # 2128

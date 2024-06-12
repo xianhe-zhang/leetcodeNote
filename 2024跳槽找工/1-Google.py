@@ -1589,8 +1589,75 @@ def shortestWay(self, s: str, t: str) -> int:
         count += 1
     return count
 
-# 418
-# 2242
+# 418. Sentence Screen Fitting
+def wordsTyping(self, sentence, rows, cols):
+
+    # Main
+    start_ptr = 0 # 用来行进，看来能走多远。这道题怎么manipulate这个ptr是很难的东西。
+    # 如何理解这个ptr，在每次开始时，ptr希望指向的是下一行的开始。
+    sentence_string = " ".join(sentence) + " " # 这里最后加的空格很重要，因为sentence是要重复地出现在这个grid中，你希望首位中间有空格。如果你要用ptr循环操控指向这个string的话。
+    str_len = len(sentence_string)
+    # for i in range(rows):
+    #     start_ptr += cols 
+    #     if sentence_string[start_ptr % str_len] == " ": 
+    #         start_ptr += 1
+    #     else:
+    #         while start_ptr > 0 and sentence_string[(start_ptr - 1) % str_len] != " ": 
+    #             start_ptr -= 1
+    # return start_ptr // str_len
+
+
+    # 每指向的是最后一行。
+    start_ptr = -1
+    for i in range(rows):
+        start_ptr += cols 
+        if sentence_string[start_ptr % str_len] == " ": 
+            continue
+    
+        elif sentence_string[(start_ptr + 1) % str_len] == " ": 
+            start_ptr += 1
+        
+        else: 
+            while start_ptr > 0 and sentence_string[start_ptr % str_len] != " ": 
+                start_ptr -= 1
+    print(start_ptr)
+    print(str_len)
+    return (start_ptr+1) // str_len
+
+
+
+# 2242. Maximum Score of a Node Sequence
+# Fun to think: 因为只有4个node，因此要将中间两个node当作root，其实也就是traverse each edge
+class Solution:
+    def maximumScore(self, scores: List[int], edges: List[List[int]]) -> int:
+        # construct the map
+        top_3_nodes = defaultdict(list)
+
+        # construct top_3_nodes {key:current node; values: top 3 nodes with highest score}
+        def construct_node_map(x, y, s):
+            bisect.insort_left(top_3_nodes[x], [s, y])
+            if len(top_3_nodes[x]) > 3:
+                top_3_nodes[x].pop(0)
+
+
+        for x, y in edges:
+            construct_node_map(x, y, scores[y])
+            construct_node_map(y, x, scores[x])
+
+        ans = -1
+        for x, y in edges:
+            if len(top_3_nodes[x]) < 2 or len(top_3_nodes[y]) < 2: # 无法满足4个的需求。
+                continue
+            
+            for m in top_3_nodes[x]:
+                for n in top_3_nodes[y]:
+                    if m[1] not in [x, y] and n[1] not in [x,y]and m[1] != n[1]:
+                        ans = max(ans, scores[x]+scores[y]+m[0]+n[0])
+        return ans
+        
+
+
+
 # 2416
 # 2018
 # 2128

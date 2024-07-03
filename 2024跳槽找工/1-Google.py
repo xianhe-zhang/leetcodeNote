@@ -1656,10 +1656,25 @@ class Solution:
         return ans
         
 
+# 2018 Check if Word Can Be Placed In Crossword
+class Solution:
+    def placeWordInCrossword(self, board: List[List[str]], word: str) -> bool:
+        words=[word,word[::-1]] # will contain word and reversed_word
+        n=len(word)
+        for B in board,zip(*board): # two iterables. The B will take one from each alternately
+            for row in B:
+                q = ''.join(row).split('#') # KEY: split("#") -> each segment will be considered as a slot for word
+                
+                # double for-loop is to get every combination
+                for w in words:
+                    for s in q:
+                        if len(s)==n: # if slot len statisfies
+                            if all(s[i]==w[i] or s[i]==' ' for i in range(n)): # we need to make sure the pre-placed letter will not have a affect.
+                                return True
+        return False
 
 
 # 2416
-# 2018
 # 2128
 # 2178
 # 843

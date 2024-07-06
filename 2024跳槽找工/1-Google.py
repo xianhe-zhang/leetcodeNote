@@ -1675,6 +1675,52 @@ class Solution:
 
 
 # 2416
+class TrieNode:
+    def __init__(self):
+        self.children = [None for _ in range(26)]
+        self.is_end = False
+        self.count = 0
+
+class Solution:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        current = self.root
+        for i in word:
+            idx = ord(i) - ord('a')    
+            if current.children[idx] == None:       
+                current.children[idx] = TrieNode()
+            current = current.children[idx] 
+            current.count += 1 
+        current.is_end = True 
+
+    def search(self, word,ans):   
+        current = self.root
+        counter = 0
+        for i in word:
+            idx = ord(i) - ord('a')
+            if current.children[idx] == None:   
+                return
+            current = current.children[idx]
+            counter += current.count
+
+        ans.append(counter) 
+
+    def sumPrefixScores(self, words: List[str]) -> List[int]:
+        # EASY just refer the 2nd Hint, visulize by incrementing the count of each word on your Trie then again iterate to call search on your trie then add up the count of those letters on the current word
+        ans = []
+        for word in words:
+            self.insert(word)
+
+        for word in words:
+            self.search(word,ans)
+
+        return ans
+    
+# 这个方法我也写出来了，只不过没有那么熟练，我还将Tire Tree的结果转化成了List，结果beyond memory limit.
+
+            
 # 2128
 # 2178
 # 843

@@ -1721,7 +1721,15 @@ class Solution:
 # 这个方法我也写出来了，只不过没有那么熟练，我还将Tire Tree的结果转化成了List，结果beyond memory limit.
 
             
-# 2128
+
+# 2128. Remove All Ones With Row and Column Flips 脑筋急转弯，找规律，一般般。。。
+class Solution:
+    def removeOnes(self, grid: List[List[int]]) -> bool:
+        r1, r1_invert = grid[0], [1-val for val in grid[0]]
+        for i in range(1, len(grid)):
+            if grid[i] != r1 and grid[i] != r1_invert:
+                return False
+        return True
 # 2178
 # 843
 

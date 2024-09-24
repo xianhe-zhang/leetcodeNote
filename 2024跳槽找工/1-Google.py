@@ -1730,7 +1730,37 @@ class Solution:
             if grid[i] != r1 and grid[i] != r1_invert:
                 return False
         return True
-# 2178
+# 2178. Maximum Split of Positive Even Integers
+# backtrack cannot optimized the process
+class Solution:
+    # def maximumEvenSplit(self, s: int) -> List[int]:
+    #     if s % 2 == 1: return []
+    #     res = []
+
+    #     def dfs(residue, start, path):
+    #         nonlocal res
+    #         if residue == 0 and len(path) > len(res):
+    #             res = path[:]
+
+    #         for i in range(start, residue + 1 , 2):
+    #             dfs(residue-i, i+2, path+[i])
+
+
+    #     dfs(s, 2, [])
+    #     return res
+        
+    def maximumEvenSplit(self, f: int) -> List[int]:
+        ans, i = [], 2
+        if f % 2 == 0:
+            while i <= f:
+                ans.append(i)
+                f -= i
+                i += 2
+            ans[-1] += f
+        return ans
+        
+
+        
 # 843
 
 # 332

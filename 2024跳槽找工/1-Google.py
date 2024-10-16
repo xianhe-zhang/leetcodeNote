@@ -1761,7 +1761,11 @@ class Solution:
         
 
         
-# 843
+# 843 Guess the word
+# 这一题的难点在于思路，如何narrow down scope.
+# 首先，我们从candidate中选出来一个最overlap的单词(most_overlap_word) -> guess会return有几个match的。
+# 如果没有找到完全的，返回值为n，假设当前去match的word是x，那么也就意味着x中有n个字母是与最终的secret一致的，也就是说和words中的那个潜在secret中有n个重合
+# 因此在下一次的循环中，candidate只用从narrow down后的list中寻找就可以了。探索性的优化算法。
 class Solution(object):
     def findSecretWord(self, wordlist, master):
 		
@@ -1769,10 +1773,12 @@ class Solution(object):
             return sum(c1 == c2 for c1, c2 in zip(a, b))
 
         def most_overlap_word():
+            # counts[i][j]： i-th index; j是char，value是出现的次数
             counts = [[0 for _ in range(26)] for _ in range(6)]     # counts[i][j] is nb of words with char j at index i
             for word in candidates:
                 for i, c in enumerate(word):
                     counts[i][ord(c) - ord("a")] += 1
+            # 当前words 某个index上的所有字母的count
 
             best_score = 0
             for word in candidates:
@@ -1795,8 +1801,68 @@ class Solution(object):
                 return
 
             candidates = [w for w in candidates if pair_matches(s, w) == matches]   # filter words with same matches
-# 332
-# 2345
+
+
+# 332. Reconstruct Itinerary
+# if you can RE-visit a vertice multiple time, then it's not a directed acyclic graph, since there will at least a cycle in the graph
+# it's called Eulerian Cycle.
+# start / end at the same vertex?
+# The main idea consists of two steps: 
+# 1.start from any until stuck at certain vertex 
+# 2.backtrack and repeat the process until all edges been used.
+from collections import defaultdict
+class Solution:
+    def findItinerary(self, tickets: List[List[str]]) -> List[str]:
+        flight_map = defaultdict(list)
+        for [ori, des] in tickets:
+            flight_map[ori].append(des)
+
+        for origin, destinations in flight_map.items():
+            # 可能有多张相同的票，倒叙排列有助于我们使用pop，让字母小的先pop出来，然后先进入backtrack的tree，我们是从底部往result中添加的。
+            destinations.sort(reverse=True)
+
+        def dfs(origin='JFK'):
+            destionations = flight_map[origin]
+            while destionations:
+                next_dest = destionations.pop()
+                dfs(next_dest)
+            result.append(origin)
+
+        result = []
+        dfs()
+        return result[::-1]
+        
+# 2345  Finding the Number of Visible Mountains
+class Solution:
+    def visibleMountains(self, peaks: List[List[int]]) -> int:
+        c = collections.Counter()    
+                          # count frequency for each point
+        for (x, y) in peaks:
+            c[(x, y)] += 1
+        peaks = sorted(c.keys())  
+        if not peaks: return 0
+       
+        def within(pa, pb):                                 # return True if `pb` is within `pa`
+            x1, y1 = pa
+            x2, y2 = pb 
+            b1 = y1 - x1
+            b2 = y1 + x1
+            return y2 <= x2 + b1 and y2 <= -x2 + b2
+
+
+        stack = [tuple(peaks[0])]
+        for x, y in peaks[1:]:
+            # while stack and within([x, y], stack[-1]):
+            while stack and within(stack[-1] ,[x, y]):
+                stack.pop()
+            if not stack or not within(stack[-1], [x, y]):
+                stack.append((x, y))
+        return len([p for p in stack if c[p] == 1])
+
+
+
+
+
 # 1857
 # 2313
 # 2104

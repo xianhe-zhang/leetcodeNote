@@ -1862,8 +1862,53 @@ class Solution:
 
 
 
+# 1857. Largest Color Value in a Directed Graph
+# This question has a few highlights:
+from collections import deque, defaultdict
+class Solution:
+    def largestPathValue(self, colors: str, edges: List[List[int]]) -> int:
+        n = len(colors)
+        adj = defaultdict(list)
+        indegree = [0] * n
 
-# 1857
+        for edge in edges:
+            adj[edge[0]].append(edge[1])
+            indegree[edge[1]] += 1
+
+        count = [[0] * 26 for _ in range(n)]  # H1: each node update, help to store the path color frequency
+        q = deque()
+
+        
+        for i in range(n):
+            if indegree[i] == 0:
+                q.append(i)
+
+        answer = 0
+        nodes_seen = 0
+
+        while q: # H2: BFS, not dfs to path by path
+            node = q.popleft()
+            color_index = ord(colors[node]) - ord('a') 
+            count[node][color_index] += 1
+            answer = max(answer, count[node][color_index]) # H3: update with current change, the change is the only possibility bigger than current answer
+            nodes_seen += 1 # H4: each node will appear once. only into q when there is no more dependence(topological sort)
+
+            if node not in adj:
+                continue
+
+            for neighbor in adj[node]:
+                for i in range(26):
+                    # Update the color frequency for the neighbor
+                    count[neighbor][i] = max(count[neighbor][i], count[node][i]) # H5: this is how we use `count` data structure
+
+                indegree[neighbor] -= 1
+                if indegree[neighbor] == 0:
+                    q.append(neighbor)
+
+        return answer if nodes_seen == n else -1
+
+
+
 # 2313
 # 2104
 

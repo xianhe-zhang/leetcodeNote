@@ -1909,8 +1909,71 @@ class Solution:
 
 
 
-# 2313
-# 2104
+# 2313. Minimum Flips in Binary Tree to Get Result
+class Solution:
+    def minimumFlips(self, root: Optional[TreeNode], result: bool) -> int:
+        def dfs(node=root):
+            val = node.val
+            if val == 0:
+                return 1, 0 
+            if val == 1:
+                return 0, 1
+
+            if val == 5:
+                t, f =  dfs(node.left or node.right)
+                return f, t
+
+
+            lt, lf = dfs(node.left)
+            rt, rf = dfs(node.right)
+            # OR -> min(lt, rt), lf+rf
+            if val == 2:
+                return min(lt + rt, lt + rf, lf + rt), lf + rf
+
+            # AND -> lt+rt, min(lf, rf)
+            elif val == 3: 
+                return lt + rt, min(lt + rf, lf + rt, lf + rf)
+            # XOR -> min(lt/rf, lf/rt), min(lt/rt, lf/rf)
+            elif val == 4:
+                return min(lf + rt, lt + rf), min(lt + rt, lf + rf)
+                
+            
+        t, f = dfs()
+        return t if result else f
+
+
+        
+# 2104. Sum of Subarray Ranges
+# Approach 1 - two loops - O(n^2)
+# Approach 2 - Monotonic stack - O(n)
+class Solution:
+    def subArrayRanges(self, nums: List[int]) -> int:
+        
+        n, res = len(nums), 0
+        stack = []
+
+
+        # 单调递增stack
+        for right in range(n+1):
+            while stack and (right == n or nums[stack[-1]] >= nums[right]): # this condition means the stack top is BOTTOM
+                mid = stack.pop()
+                left = -1 if not stack else stack[-1]
+                res -= nums[mid] * (mid - left) * (right - mid) 
+                # mid - left: 以mid结尾的subarray，这里的left是上一个比mid大的index，因此mid-left就可以
+                # right - left: 以mid开始的subarray, 这里的right是下一个比mid大的index
+                # 两者*，刚好等于当前mid可以覆盖的最小值的所有subarray数量。
+            stack.append(right)
+
+        stack.clear()
+        for right in range(n+1):
+            while stack and (right == n or nums[stack[-1]] <= nums[right]):
+                mid = stack.pop()
+                left = -1 if not stack else stack[-1]
+                res += nums[mid] * (mid - left) * (right - mid) 
+            stack.append(right)
+
+        return res
+
 
 # 2277
 # 581

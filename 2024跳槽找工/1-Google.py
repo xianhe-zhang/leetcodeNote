@@ -1975,8 +1975,68 @@ class Solution:
         return res
 
 
-# 2277
-# 581
+# 2277. Closest Node to Path in Tree
+class Solution:
+    def closestNode(self, n: int, edges: List[List[int]], query: List[List[int]]) -> List[int]:
+        trees = defaultdict(list)
+        for x, y in edges:
+            trees[x].append(y)
+            trees[y].append(x)
+        distances = [[float('inf')] * n for _ in range(n)]
+
+        # tree graph === acyclic undirected
+        for x in range(n):  # x is the start point
+            queue = deque([x])
+            distances[x][x] = 0
+
+            while queue:
+                cur = queue.popleft()
+                for nex in trees[cur]:
+                    if distances[x][nex] == float('inf'):
+                        distances[x][nex] = distances[x][cur] + 1
+                        queue.append(nex)
+            
+        # Highlight: when trying to find a point from a path closest to a certain point. We are actually looking for a point that has minimal sum of distances from start/ending/target points.
+        return [min(range(n), key=lambda x: distances[x][a] + distances[x][b] + distances[x][q]) for a, b, q in query]
+
+# 优化方法，有了approach 1的highlight，那么其实我们在找三个点的lowest common ancestor
+
+# 581. Shortest Unsorted Continuous Subarray
+class Solution:
+    def findUnsortedSubarray(self, nums: List[int]) -> int:  
+        min_val, max_val = float('inf'), float('-inf')
+        flag = False
+        
+        # 不能只找不满足asc顺序的第一个元素。
+        # 找到最小的需要排序的元素
+        for i in range(1, len(nums)):
+            if nums[i] < nums[i - 1]:
+                flag = True
+            if flag:
+                min_val = min(min_val, nums[i])
+        
+        flag = False
+        
+        # 找到最大的需要排序的元素
+        for i in range(len(nums) - 2, -1, -1):
+            if nums[i] > nums[i + 1]:
+                flag = True
+            if flag:
+                max_val = max(max_val, nums[i])
+        
+        # 找到最左边的和最右边的边界
+        l, r = 0, len(nums) - 1
+        while l < len(nums) and min_val >= nums[l]:
+            l += 1
+        while r >= 0 and max_val <= nums[r]:
+            r -= 1
+        return 0 if r - l < 0 else r - l + 1
+
+
+# 用sort，用stack都可以。
+
+
+
 # 2254
 # 33
 # 2459

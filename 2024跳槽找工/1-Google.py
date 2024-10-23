@@ -2035,91 +2035,145 @@ class Solution:
 
 # 用sort，用stack都可以。
 
+# 2254. Design Video Sharing Platform
+# 不难
+class VideoSharingPlatform:
+    def __init__(self):
+        self.videos = defaultdict(list) # [video_string, views, likes, dislikes]
+        self.max_id = 0
+        self.free_ids = []
+
+    def upload(self, video: str) -> int:
+        if self.free_ids:
+            new_id = heapq.heappop(self.free_ids)
+        else:
+            new_id = self.max_id
+            self.max_id += 1
+        self.videos[new_id] = [video, 0, 0, 0]
+        return new_id
+
+    def remove(self, videoId: int) -> None:
+        if videoId in self.videos:
+            heapq.heappush(self.free_ids, videoId)
+            del self.videos[videoId]
+    
+    def watch(self, videoId: int, startMinute: int, endMinute: int) -> str:
+        if videoId not in self.videos: return '-1'
+        cur_video_ptr = self.videos[videoId]
+        cur_video_ptr[3] += 1
+        return cur_video_ptr[0][startMinute: min(endMinute+1, len(cur_video_ptr[0]))]
+
+    def like(self, videoId: int) -> None:
+        if videoId in self.videos:
+            self.videos[videoId][1] += 1
+
+    def dislike(self, videoId: int) -> None:
+        if videoId in self.videos:
+            self.videos[videoId][2] += 1
+
+    def getLikesAndDislikes(self, videoId: int) -> List[int]:
+        if videoId not in self.videos: return [-1]
+        return [self.videos[videoId][1], self.videos[videoId][2]]
+
+    def getViews(self, videoId: int) -> int:
+        if videoId not in self.videos: return -1
+        return self.videos[videoId][3]
+
+# 33. Search in Rotated Sorted Array
+class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        n = len(nums)
+        l, r = 0, n-1
+        while l < r:
+            mid = (l + r) // 2
+            mid_val = nums[mid]
+            
+            if target == mid_val: return mid # cut edge
+
+            if mid_val >= nums[l]:
+                if nums[l] <= target < mid_val:
+                    r = mid - 1
+                else: 
+                    l = mid + 1
+            else:
+                if mid_val < target <= nums[r]:
+                    l = mid + 1
+                else: 
+                    r = mid - 1
+       
+        # 如果是l<=r, 在最后一遍的循环中，我们其实可以检测当前值，因此如果跳出了，就意味着target不在区间中，因此直接返回-1.
+        # return -1
+        return r if nums[l] == target else -1
 
 
-# 2254
-# 33
 # 2459
 # 946
-
 # 2510
 # 1020
 # 1254
 # 2371
 # 13
 # 4
-
 # 394
 # 875
 # 759
 # 402
 # 1360
-
 # 929
 # 975
 # 482
 # 904
 # 3
-
 # 11
 # 15
 # 31
 # 43
 # 48
 # 55
-
 # 66
 # 76
 # 158
 # 159
 # 163
 # 681
-
 # 809
 # 849
 # 42
 # 215
 # 844
 # 857
-
 # 973
 # 2
 # 138
 # 127
 # 210
-
 # 222
 # 399
 # 2829
 # 753
 # 947
-
 # 951
 # 425
 # 247
 # 351
 # 17
 # 22
-
 # 34
 # 315
 # 852
 # 5
 # 152
-
 # 322
 # 518
 # 410
 # 146
 # 155
-
 # 297
 # 380
 # 642
 # 7
 # 135
 # 205
-
 # 246
 # 299
 # 308

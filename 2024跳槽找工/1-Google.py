@@ -2106,7 +2106,44 @@ class Solution:
         return r if nums[l] == target else -1
 
 
-# 2459
+# 2459. Sort Array by Moving Items to Empty Space
+class Solution:
+    def sortArray(self, nums: List[int]) -> int:
+        def process(nums, final_zero_idx):
+            res = 0
+            idxs = {v:i for i, v in enumerate(nums)}
+            process_idx = 1 if final_zero_idx == 0 else 0
+
+            # If zero is at index 3, then we swap zero with the number "3". After swap, the number "3" goes to index "3",
+            # which is its final position, and "zero" goes to a new position that could be anywhere
+            def swap(i):
+                nonlocal res
+                num = nums[i]
+                zero_idx = idxs[0]
+                nums[zero_idx], nums[i] = nums[i], nums[zero_idx]
+                idxs[num], idxs[0] = zero_idx, i
+                res += 1
+            
+            offset = 0 if final_zero_idx == 0 else 1 # this is used to add to num 
+            while True:
+                num = idxs[0]+offset # the number to swap with zero
+
+                if idxs[0] != final_zero_idx:
+                    swap(idxs[num])
+                
+                else: 
+                # cannot swap zero if zero is already at final_zero_index
+                # swap the first number that isn't on its final position
+                    while process_idx < len(nums) and nums[process_idx]==process_idx + offset: # 意味着已经在final position
+                        process_idx += 1
+                    if process_idx == len(nums)-offset: # 此时已经进行到最后一位需要process的，如果最后一位是0的话，offset就为1.
+                        return res
+                    swap(idxs[nums[process_idx]])
+
+
+
+        return min(process(nums[:], 0), process(nums[:], len(nums)-1))
+    
 # 946
 # 2510
 # 1020

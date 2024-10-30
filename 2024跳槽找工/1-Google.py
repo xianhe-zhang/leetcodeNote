@@ -2144,11 +2144,118 @@ class Solution:
 
         return min(process(nums[:], 0), process(nums[:], len(nums)-1))
     
-# 946
-# 2510
-# 1020
-# 1254
-# 2371
+# 946 Validate Stack Sequences
+class Solution:
+    def validateStackSequences(self, pushed: List[int], popped: List[int]) -> bool:
+        stack = list()
+        pop_index = 0
+        for e in pushed:
+            stack.append(e)
+            while stack and stack[-1] == popped[pop_index]:
+                stack.pop()
+                pop_index += 1
+
+        return len(stack) == 0
+
+            
+# 2510. Check if There is a Path With Equal Number of 0's And 1's
+# the question's core part is to realize: from start to end, there must exist a path, whose sum between min-path-sum and max-path-sum, given that the path sum only change by one at a time.
+class Solution:
+    def isThereAPath(self, grid: List[List[int]]) -> bool:
+        rows, cols = len(grid), len(grid[0])
+        if (rows + cols) % 2 == 0:
+            return False
+        
+        min_ = [[0] * cols for _ in range(rows)]
+        max_ = [[0] * cols for _ in range(rows)]
+        
+        min_[0][0] = max_[0][0] = grid[0][0]
+
+        for row in range(1, rows):
+            min_[row][0] = min_[row-1][0] + grid[row][0]
+            max_[row][0] = max_[row-1][0] + grid[row][0]
+
+        for col in range(1, cols):
+            min_[0][col] = min_[0][col-1] + grid[0][col]
+            max_[0][col] = max_[0][col-1] + grid[0][col]
+
+        for row in range(1, rows):
+            for col in range(1, cols):
+                min_[row][col] = min(min_[row-1][col], min_[row][col-1]) + grid[row][col]
+                max_[row][col] = max(max_[row-1][col], max_[row][col-1]) + grid[row][col]
+            
+        target = (rows+cols-1)//2
+        return min_[-1][-1] <= target <= max_[-1][-1]
+
+# 1020. Number of Enclaves
+# BFS/DFS
+class Solution:
+    def numEnclaves(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        def dfs(x, y):
+            grid[x][y] = 0
+            
+            for nx, ny in ((x+1, y), (x-1, y), (x, y+1), (x, y-1)):
+                if 0 <= nx < m and 0 <= ny < n and grid[nx][ny] == 1:
+                    dfs(nx, ny)
+
+        m, n = len(grid), len(grid[0])
+        for i in range(len(grid)):
+            if grid[i][0] == 1: dfs(i, 0)
+            if grid[i][n-1] == 1: dfs(i, n-1)
+        
+        for i in range(1, len(grid[0])-1):
+            if grid[0][i] == 1: dfs(0, i)
+            if grid[m-1][i] == 1: dfs(m-1, i)
+        
+        return sum(sum(x) for x in grid)
+
+
+
+# 1254. Number of Closed Islands
+# 0 -> land;
+class Solution:
+    def closedIsland(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        visit = [[False] * n for _ in range(m)]
+        count = 0
+        
+        for i in range(m):
+            for j in range(n):
+                # 1. is land
+                # 2. not visited or we can modify it to water
+                # 3. not boundary & modify connecting land (== sub BFS)
+                if grid[i][j] == 0 and not visit[i][j] and self.bfs(i, j, m, n, grid, visit):
+                    count += 1
+                    
+        return count
+
+    def bfs(self, x, y, m, n, grid, visit):
+        q = deque([(x, y)])
+        visit[x][y] = True
+        isClosed = True
+
+        dirx = [0, 1, 0, -1]
+        diry = [-1, 0, 1, 0]
+
+        while q:
+            x, y = q.popleft()
+            
+            for i in range(4):
+                r, c = x + dirx[i], y + diry[i]
+                
+                if r < 0 or r >= m or c < 0 or c >= n:
+                    # (x, y) is a boundary cell
+                    isClosed = False
+                elif grid[r][c] == 0 and not visit[r][c]:
+                    q.append((r, c))
+                    visit[r][c] = True
+        
+        return isClosed
+
+
+# 1632
+
 # 13
 # 4
 # 394

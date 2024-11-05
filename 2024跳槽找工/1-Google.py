@@ -2254,11 +2254,163 @@ class Solution:
         return isClosed
 
 
-# 1632
+# 1632. Rank Transform of a Matrix
+class Solution:
+    def matrixRankTransform(self, matrix: List[List[int]]) -> List[List[int]]:
+        m, n = len(matrix), len(matrix[0])
 
-# 13
+        ##### finding connected parts
+        graphs = dict() 
+        for i in range(m):
+            for j in range(n):
+                v = matrix[i][j]
+                if v not in graphs:
+                    graphs[v] = {}
+                
+                if i not in graphs[v]:
+                    graphs[v][i] = []
+
+                if ~j not in graphs[v]: # graph是2-dimension，第一个存值，第二个存row和col，～表示当前的值是col值。  
+                    graphs[v][~j] = []
+
+                graphs[v][i].append(~j)
+                graphs[v][~j].append(i)
+        
+        value2index = {}
+        seen = set()
+        for i in range(m):
+            for j in range(n):
+                if (i, j) in seen: 
+                    continue
+                seen.add((i,j))
+                v = matrix[i][j]
+                graph = graphs[v]
+                # start bfs
+                q = [i, ~j]
+                rowcols = {i, ~j} # store visited row and col
+                while q:
+                    node = q.pop(0)
+                    for rowcol in graph[node]:
+                        if rowcol not in rowcols:
+                            q.append(rowcol)
+                            rowcols.add(rowcol)
+
+                points = set()
+                for rowcol in rowcols:
+                    for k in graph[rowcol]:
+                        if k >= 0: # k是横坐标
+                            points.add((k, ~rowcol))
+                            seen.add((k, ~rowcol))
+                        else:
+                            points.add((rowcol, ~k))
+                            seen.add((rowcol, ~k)) 
+
+                if v not in value2index:
+                    value2index[v] = []
+                value2index[v].append(points) # 将points存到这个值中去。
+                # value2index[v]存放的是值为v的connected parts，要明白，我们一个garph中，可能有多个值相同的connected parts
+
+        answer = [[0] * n for _ in range(m)]
+        rowmax = [0] * m # the max rank in i row
+        colmax = [0] * n # the max rank in j col
+        for v in sorted(value2index.keys()):
+        
+            for points in value2index[v]:
+                rank = 1 # rank是针对每个connected parts的，每个connected part应该share同一个rank，这个根据题意可以conclude
+                
+                # 拿到rank
+                for i, j in points:
+                    rank = max(rank, max(rowmax[i], colmax[j]) + 1) # 因为我们从小到大值去update rank matrix，因此可以保证rank的计算不会出错。
+                # 更新answer和row/col-max
+                for i, j in points:
+                    answer[i][j] = rank
+                    rowmax[i] = max(rowmax[i], rank) 
+                    colmax[j] = max(colmax[j], rank)
+
+        return answer
+
+# 13. Roman to Integer 
+# O(1)/O(1)
+VALUES  = {
+    "I": 1,
+    "V": 5,
+    "X": 10,
+    "L": 50,
+    "C": 100,
+    "D": 500,
+    "M": 1000,
+}
+
+class Solution: 
+    def romanToInt(self, s):
+        ans = 0
+        i = 0
+        n = len(s)
+        while i < n:
+            if i+1 < n and VALUES[s[i+1]] > VALUES[s[i]]:
+                ans += VALUES[s[i+1]] - VALUES[s[i]]
+                i += 2
+            else:
+                ans += VALUES[s[i]]
+                i += 1
+        return ans
+    
+# 394. Decode String
+class Solution:
+    def decodeString(self, s: str) -> str:
+        stack = []
+        cur_num = 0
+        cur_str = ''
+        # 利用cur_str有3个highlights需要想明白。
+        for c in s:
+            if c.isdigit():
+                cur_num *= 10
+                cur_num += int(c)
+
+            if c.isalpha():
+                cur_str += c
+            
+            if c == '[':
+                # stack存放数字和string，我因为正括号和反括号一定是一一对应的，那么我们只需要在[的时候同时添加num和str，就可以保证pop的时候，顺序和数据是我们expect的。
+                # 因为确实存在abc34[edf]的情况，而且这里cur_str是build answer的。
+                stack.append(cur_num)
+                stack.append(cur_str)
+                cur_num, cur_str = 0, ''
+
+
+            # cur是用来build answer的，主体是cur_str，只不过被括号分割开了。如果遇到了[,那么就先把当前的答案存进去，并且cur_num也一定有数
+            if c == ']':
+                prev_str = stack.pop()
+                prev_num = stack.pop()
+                cur_str = prev_str + prev_num * cur_str 
+                
+        return cur_str
+
+        # # 需要了解的前提：stack里面存放的[格外重要！因为其前面一定是数字，其后面一定是letter！
+        # stack = []
+        # for c in s:
+        #     if c == ']':
+
+        #         # 处理str的逻辑，digit和str一定是由[分割开的。因此我们只需要找到
+        #         cur_str = ''
+        #         while stack and stack[-1] != '[':
+        #             cur_str = stack.pop() + cur_str
+                
+        #         stack.pop() # to pop '['
+
+        #         # 处理digit的逻辑
+        #         temp_num = ''
+        #         while stack and stack[-1].isdigit():
+        #             temp_num = stack.pop() + temp_num
+                
+        #         stack.append(int(temp_num)*cur_str) # 我们只找到一对数字和str
+
+
+        #     else:
+        #         stack.append(c)
+
+        # return ''.join(stack)
 # 4
-# 394
 # 875
 # 759
 # 402

@@ -609,31 +609,6 @@ class Solution:
         return False
     
 
-# 939. Minimum Area Rectangle
-# O(n2)/O(n)
-# 思路还是遍历所有的可能性，问题的关键就是如何遍历，如何计算rectangle
-# 按照row作main loop，然后i,j - for循环用来找两条col，也就是两个col坐标，所有的col坐标的组合都会被记录，去显示他们有没有x可以对应。
-# 然后就是ans = min
-# 这类题目之所以记录的目的就是因为不熟悉。
-class Solution:
-    def minAreaRect(self, points):
-        columns = defaultdict(list)
-        for x, y in points:
-            columns[x].append(y)
-        lastx = {}
-        ans = float('inf')
-
-        for x in sorted(columns):
-            column = columns[x]
-            column.sort() 
-            for j, y2 in enumerate(column):
-                for i in range(j):
-                    y1 = column[i]
-                    if (y1, y2) in lastx:
-                        ans = min(ans, (x - lastx[y1,y2]) * (y2 - y1))
-                    lastx[y1, y2] = x
-        return ans if ans < float('inf') else 0
-    
 # 3371  Identify the Largest Outlier in an Array 数学可以不太看
 class Solution:
     def getLargestOutlier(self, A: List[int]) -> int:
@@ -682,6 +657,63 @@ for i, val1 in enumerate(nums):
             seen[val2] = i
 
 # 63 也是dp很简单的，有障碍物的unique path
+
+
+# 939. Minimum Area Rectangle
+# O(n2)/O(n)
+# 思路还是遍历所有的可能性，问题的关键就是如何遍历，如何计算rectangle
+# 按照row作main loop，然后i,j - for循环用来找两条col，也就是两个col坐标，所有的col坐标的组合都会被记录，去显示他们有没有x可以对应。
+# 然后就是ans = min
+# 这类题目之所以记录的目的就是因为不熟悉。
+class Solution:
+    def minAreaRect(self, points):
+        columns = defaultdict(list)
+        for x, y in points:
+            columns[x].append(y)
+        lastx = {}
+        ans = float('inf')
+
+        for x in sorted(columns):
+            column = columns[x]
+            column.sort() 
+            for j, y2 in enumerate(column):
+                for i in range(j):
+                    y1 = column[i]
+                    if (y1, y2) in lastx:
+                        ans = min(ans, (x - lastx[y1,y2]) * (y2 - y1))
+                    lastx[y1, y2] = x
+        return ans if ans < float('inf') else 0
+    
+
+# ㊗️ 84. Largest Rectangle in Histogram - 这一题的思考很好！尤其是边界问题的思考
+class Solution:
+    
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        stack = []
+        max_area = 0
+        # monotonic increasing stack,
+        # 两个理解的核心点：
+        # 1. when considering rectangle, we take current_height as base point to construct as big as possible rec
+        # 2. current_height is not current_index, it is acutally the element poped.
+        for i in range(len(heights)):
+            print(stack,"---",max_area)
+            # 这里为什么只考虑当前height和其左边的边界，因为我们是基于当前的height！
+            # 原本stack[0,1]，如果满足pop的条件，我的右边界相当于current_index，这是一个技巧。
+            while stack and heights[stack[-1]] >= heights[i]:
+                current_height = heights[stack.pop()]  # here!
+                left_boundary = -1 if not stack else stack[-1]
+                current_width = i - left_boundary - 1 
+                max_area = max(max_area, current_height * current_width)
+            stack.append(i)
+        # 最后留下的值，是遍历完所有的，因此，因此右边界是最右边！也考虑到了bottom值。
+        while stack:
+            current_height = heights[stack.pop()]
+            left_boundary = -1 if not stack else stack[-1]
+            current_width = len(heights) - left_boundary - 1
+            max_area = max(max_area, current_height * current_width)
+        return max_area
+
+
 
 # 85. Maximal Rectangle O(NM)/O(N)
 class Solution:
@@ -1182,7 +1214,35 @@ class Solution:
         return count <= 1
 
 # 351. Android Unlock Patterns - 主体思路很常规的backtrack，只给了取值范围，那么你for循环，然后每一个元素都要进去backtrack。
+class Solution:
+    def numberOfPatterns(self, m, n):
+        has_obstacle = {(1,3):2, (1,7):4, (1,9):5, (2,8):5, (3,7):5, (3,1):2, (3,9):6, (4,6):5, (6,4):5, (7,1):4, (7,3):5, (7,9):8, (8,2):5, (9,7):8, (9,3):6, (9,1):5}
+        
 
+        def getValidWays(num, count): # num是当前数字，count是使用了多少次
+            nonlocal validPatterns
+            # consider the valid patterns only in length (m to n)
+            if m <= count <= n:
+                validPatterns += 1
+            # after reaching path count 'n', we need not go on any further.
+            if count == n: return
+            
+            visited.add(num)
+            for nextNum in range(1, 10):
+                if nextNum not in visited:
+                    # if a nextNum has an obstacle while starting from num, and is not visited previously, don't consider this path.
+                    if (num, nextNum) in has_obstacle and has_obstacle[(num, nextNum)] not in visited:
+                        continue
+                    getValidWays(nextNum, count+1)
+            visited.remove(num)
+
+        validPatterns = 0
+        for num in range(1, 10):
+            visited = set()
+            getValidWays(num, 1)
+        return validPatterns
+    
+    
 
 # 354. Russian Doll Envelopes
 # 这一题思路很奇妙呀！

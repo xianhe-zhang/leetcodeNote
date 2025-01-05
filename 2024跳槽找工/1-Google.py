@@ -2410,78 +2410,1015 @@ class Solution:
         #         stack.append(c)
 
         # return ''.join(stack)
-# 4
-# 875
-# 759
-# 402
-# 1360
-# 929
-# 975
-# 482
-# 904
-# 3
-# 11
-# 15
-# 31
+
+
+# 759 759. Employee Free Time 很简单...就是处理对象变为object了
+class Solution:
+    def employeeFreeTime(self, schedule: '[[Interval]]') -> '[Interval]':
+        ints = sorted([i for s in schedule for i in s], key=lambda x: (x.start, x.end))
+
+        res, pre = [], ints[0]
+        for i in ints[1:]:
+            if i.start <= pre.end and pre.end < i.end: #  pre和当前i有overlap 
+                pre.end = i.end
+            elif i.start > pre.end:
+                res.append(Interval(pre.end, i.start))
+                pre = i
+        return res
+        
+# 402. Remove K Digits
+# 这一题的难点在于：
+# 1. 想到用monotonic stack去build increasing subsequence
+# 2. 如果首位是0怎么办？
+# 3. 如果末尾没清空怎么办？
+class Solution:
+    def removeKdigits(self, num: str, k: int) -> str:
+        stack = list()
+        for n in num:
+            
+            # 如果K还可以操作，我们想要的是max_stack，递增，保证stack里面顺序组成的是尽可能小的
+            while stack and k and stack[-1] > n: 
+                stack.pop()
+                k -= 1
+            
+            if stack or n != '0': # to escape the first digit is 0 
+                stack.append(n)
+        
+        if k: # 把最后几位清掉
+            stack = stack[0:-k] 
+        
+        return ''.join(stack) or '0'
+        
+        
+# 929. Unique Email Addresses
+class Solution:
+    def numUniqueEmails(self, emails: List[str]) -> int:
+        def clean(e):
+            # 搞清楚清理顺序就可以了。
+            [local, domain] = e.split('@')
+            local = local.split('+')[0]
+            local = ''.join(local.split('.'))
+            return local+"@"+domain
+
+        seen = set()
+        for e in emails:
+            seen.add(clean(e))
+        return len(seen)
+    
+# 482. License Key Formatting
+# this question can be medium instead of easy given its details.
+# poor test case for understanding.
+# 1. 倒序处理，是因为other groups contain exactly k but first group
+# 2. 如果不是 ‘-’，那么就count起来，count一旦满足k，就init count，并且添加-
+class Solution:
+    def licenseKeyFormatting(self, s: str, k: int) -> str:
+        n = len(s)
+        count = 0
+        ans = ''
+        
+        for i in reversed(range(n)):
+            if (s[i] != '-'): # may be many dash
+                ans += s[i].upper()
+                count += 1
+                if (count == k):
+                    count = 0
+                    ans += '-'
+     
+        # Make sure the output doesn't start with a dash -> another trap
+        if (len(ans) > 0 and ans[len(ans)-1] == '-'):
+            ans = ans[:-1]
+        
+        ans = ans[::-1]
+        return ans
+
+# 904. Fruit Into Baskets
+# 经典的题，lazy update，只用找到最大值就行了...
+# 只要window超过3个了，就要narrow window了。
+class Solution:
+    def totalFruit(self, fruits: List[int]) -> int:
+        basket = defaultdict(int)
+        left = 0
+        
+        # Add fruit from the right index (right) of the window.
+        for right, fruit in enumerate(fruits):
+            basket[fruit] += 1
+
+            if len(basket) > 2:
+                basket[fruits[left]] -= 1
+                if basket[fruits[left]] == 0:
+                    del basket[fruits[left]]
+                left += 1
+        
+        return right - left + 1
+    
+# 975. Odd Even Jump - O(nlogn)/O(n)
+# Odd 可以跳到bigger(smallest index)
+# even 可以跳到smaller(smallest index)
+class Solution:
+    def oddEvenJumps(self, arr: List[int]) -> int:
+        n = len(arr)
+        next_higher, next_lower = [0] * n, [0] * n # next_higher[i]记录的是当前index下一个可以跳的更高的数字的最小index是多少
+        
+        # 构建的方法很有趣
+        stack = []
+        for [a, i] in sorted([[a,i] for i, a in enumerate(arr)]):
+            while stack and stack[-1] < i:
+                next_higher[stack.pop()] = i
+            stack.append(i)
+
+        # 同理构建
+        stack = []
+        for [a, i] in sorted([[-a,i] for i, a in enumerate(arr)]):
+            while stack and stack[-1] < i:
+                next_lower[stack.pop()] = i
+            stack.append(i)
+
+        # 交替跳跃，相当于两个dp
+        higher, lower = [0] * n, [0] * n
+        higher[-1] = lower[-1] = 1
+        for i in range(n-1)[::-1]: # 牛逼，如果next_higher[i]有值，next_higher[i] -> next index with higher value，就是意味着可以从当前跳到next_index, 我们这里init结尾为1，那么就是意味着可以跳到结尾。
+            higher[i] = lower[next_higher[i]]
+            lower[i] = higher[next_lower[i]]
+        return sum(higher) # 我们是从奇数开始跳的
+
+
+# 31. Next Permutation
+# 这一题的核心是理解how permutation works吧...
+# 1- 从后往前遍历，找到第一对升序的pair；num[i] < num[i+1]; 此刻num[i+1:]一定是descending的
+# 2- 如果不是全程降序，也就是说能找到升序的pair(i>=0), 在num[i+1:]中从后往前尝试找第一个比num[i]大的数字。从而替换。
+# 3- 反转num[i+1:] swap掉关键点之后，后面的num[i+1:]我们使其最小，从而满足next permutation
+# [4,7,6,5,3,1] -> [5,7,6,4,3,1] -> [5,1,3,4,6,7] 仔细观察4和5
+class Solution:
+    def nextPermutation(self, nums):
+        if len(nums) <= 1:
+            return
+        
+        i = len(nums) - 2
+        while i >= 0 and nums[i] >= nums[i + 1]: # 想找到相对降序的pair [3,2]
+            i -= 1
+        
+        if i >= 0:  # 这个if表明，存在降序的pair
+            j = len(nums) - 1
+            while nums[j] <= nums[i]:
+                j -= 1
+            nums[i], nums[j] = nums[j], nums[i]
+        
+        left, right = i + 1, len(nums) - 1
+        while left < right:
+            nums[left], nums[right] = nums[right], nums[left]
+            left, right = left + 1, right - 1
+
 # 43
-# 48
-# 55
-# 66
-# 76
-# 158
-# 159
-# 163
-# 681
-# 809
-# 849
-# 42
-# 215
-# 844
-# 857
-# 973
-# 2
-# 138
-# 127
-# 210
-# 222
-# 399
-# 2829
-# 753
-# 947
-# 951
-# 425
-# 247
-# 351
-# 17
-# 22
-# 34
-# 315
-# 852
-# 5
-# 152
-# 322
-# 518
-# 410
-# 146
-# 155
-# 297
-# 380
-# 642
-# 7
-# 135
-# 205
-# 246
-# 299
-# 308
-# 731
-# 771
-# 939
-
-
-# 78-13 = 65
+# 48. Rotate Image
+# [i][j]
+#   -> [j][i]     transpose 主坐标轴对称
+#   -> [n-1-i][j] 水平对称
+#   -> [i][n-1-j] 垂直对称
+#   旋转90度 == 垂直对称 -> 转置 / 转置 -> 水平对称
+class Solution:
+    def rotate(self, matrix: List[List[int]]) -> None:
+        n = len(matrix[0])
+        for i in range(n // 2 + n % 2): 
+            for j in range(n // 2):
+                tmp = matrix[n - 1 - j][i]
+                matrix[n - 1 - j][i] = matrix[n - 1 - i][n - j - 1]
+                matrix[n - 1 - i][n - j - 1] = matrix[j][n - 1 -i]
+                matrix[j][n - 1 - i] = matrix[i][j]
+                matrix[i][j] = tmp
+    # 需要处理的4个点:[i,j], [n-1-i][n-1-j], [j][n-i-1], [n-1-j][i]
+    # 如何理解这四个点，其实只用注意四个顶点就好了。 第一个是原点，后三个分别为三个顶点。
+    # 这里的方法是in-place rotation
 
 
 
+# 158. Read N Characters Given read4 II - Call Multiple Times
+# 这一题是用来模拟的。
+# 主要的思路是：传递进来n个数，用while循环读取每个数，
+# 1. 看看ptr == size与否，相等意味着缓冲区耗尽，因此需要reset并且读取
+# 2. sub-while用于读取缓冲区->buf
+# return res
+class Solution:
+    def __init__(self):
+        # 用来存储多读的字符
+        self.buffer = [""] * 4
+        self.buffer_size = 0
+        self.buffer_ptr = 0
+
+    def read(self, buf: List[str], n: int) -> int:
+        # 这里的n时要读取多少个字符
+        total_chars = 0  # 已读取的字符数量
+        
+        while total_chars < n:
+            if self.buffer_ptr == self.buffer_size:  # 如果缓冲区已耗尽，调用 read4
+                self.buffer_size = read4(self.buffer)  # 从文件中读取最多 4 个字符到 self.buffer
+                self.buffer_ptr = 0
+                if self.buffer_size == 0:  # 如果文件已经读取完毕，退出循环
+                    break
+            
+            # 从缓冲区读取字符到 buf
+            while total_chars < n and self.buffer_ptr < self.buffer_size:
+                buf[total_chars] = self.buffer[self.buffer_ptr]
+                total_chars += 1
+                self.buffer_ptr += 1
+
+        return total_chars
+
+# 163. Missing Ranges
+class Solution:
+    def findMissingRanges(self, nums: List[int], lower: int, upper: int) -> List[List[int]]:
+        res=[]
+        # lower可以看作cur取值的下限，如果大于这个下限，意味着就有range，否则就没有。
+        for cur in nums+[upper+1]:
+            if cur>lower: # 如果我们写成lower=cur，这里改为cur > lower+1，我们会错过cur==lower+1的情况，这样有可能会导致我们错过第一个元素的范围，因为第一次的lower并不是上一个元素的范围，而是边界lower本身。
+                res.append([lower,cur-1])
+            lower=cur+1 
+        return res
+# 681. Next Closest Time
+class Solution:
+    def nextClosestTime(self, time: str) -> str:
+        hh, mm = time.split(':')
+        # print(set(hh+mm))
+        # digits = set([hh[0],hh[1],mm[0],mm[1]])
+        nums = sorted(set(hh + mm)) # 因为hh+mm是一个字符串
+        two_digits_values = [a+b for a in nums for b in nums] # 所有两个数的可能
+
+        # check if any minute valid
+        i = two_digits_values.index(mm)
+        if i + 1 < len(two_digits_values) and two_digits_values[i + 1] < "60":
+            return hh + ":" + two_digits_values[i+1] 
+        
+        # check if any hour valid
+        i = two_digits_values.index(hh)
+        if i + 1 < len(two_digits_values) and two_digits_values[i + 1] < "24":
+            return two_digits_values[i+1] + ":" + two_digits_values[0]
+        
+
+        return two_digits_values[0] + ":" + two_digits_values[0] # earliest time of next day.
+
+
+# 809. Expressive Words
+# 这一题还是有点困难的，尤其是双指针的转化
+class Solution:
+    def expressiveWords(self, S, words):
+        return sum(self.check(S, W) for W in words)
+
+    def check(self, S, W):
+        j, n = 0, len(S)
+        for i in range(n):
+            if j < len(W) and S[i] == W[j]:  # 如果当前字符相同
+                j += 1
+            # 如果当前字符不同，看看上一个字符能不能stretch
+            # 这里是两个不等式的and expression
+            # [i-1, i, i+1] != [i,i,i] and [i, i, i] != [i-2, i-1, i]
+            # [i-1, i, i+1] == [i,i,i] or [i, i, i] or [i-2, i-1, i]  分别对应中间 或者 分别对应最后
+            elif S[i - 1:i + 2] !=  S[i] * 3 != S[i - 2:i + 1]:  
+                return False
+        return j == len(W)
+        
+# 849. Maximize Distance to Closest Person
+# 这里用的是max，也可以使用双指针，每次遇到1，向周围探索。
+class Solution:
+    def maxDistToClosest(self, seats: List[int]) -> int:
+        seats = "".join(list(map(str, seats)))
+        zeros = seats.split('1')
+        l = len(max(zeros, key=len))
+        res = max(len(zeros[0]), len(zeros[-1]), l//2 + l%2) # max(首， 尾， 中间0)
+        return res
+
+# 215. Kth Largest Element in an Array
+# 1. Sort - O(nlogn)
+# 2. Heap - O(nlogk)
+# 3. Quick select - O(n)/O(n)
+# 4. counting sort - O(n+m)/O(n)
+class Solution:
+    # def findKthLargest(self, nums: List[int], k: int) -> int:
+    #     min_ = min(nums)
+    #     max_ = max(nums)
+    #     count = [0] * (max_ - min_ + 1)
+
+    #     for n in nums:
+    #         count[n-min_] += 1
+        
+    #     remain = k
+
+    #     for i in range(len(count)-1, -1, -1):
+    #         remain -= count[i]
+    #         if remain <= 0: return min_+i
+
+    #     return -1
+
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        def quick_select(nums, k):
+            pivot = random.choice(nums)
+            left, mid, right = [], [], []
+            for n in nums:
+                if n > pivot:
+                    left.append(n)
+                elif n < pivot:
+                    right.append(n)
+                else:
+                    mid.append(n)
+            
+            if k <= len(left):
+                return quick_select(left, k)
+            if len(left) + len(mid) < k:
+                return quick_select(right, k - len(left) - len(mid))
+
+            return pivot
+
+        return quick_select(nums, k)
+
+
+# 210 Course schedule II - return res if len(res) == num_courses else []
+# O(V+E)/O(V+E)
+
+
+# 399. Evaluate Division 
+# - 常规BFS
+# - UF - 太复杂了，可以不用看了。
+class Solution:
+    def calcEquation(self, equations: List[List[str]], values: List[float], queries: List[List[str]]) -> List[float]:   
+        gid_weight = {}  # gid==group_id; gid_weight装了 字母 + 与其对应的字母 + 两者之间的关系
+
+        def find(node_id):
+            if node_id not in gid_weight: # 没有遇见过，把node和weight添加进来。
+                gid_weight[node_id] = (node_id, 1) 
+            group_id, node_weight = gid_weight[node_id]
+            # 
+            if group_id != node_id: 
+                new_group_id, group_weight = find(group_id)
+                gid_weight[node_id] = (new_group_id, node_weight * group_weight)
+            return gid_weight[node_id]
+
+        def union(dividend, divisor, value):
+            dividend_gid, dividend_weight = find(dividend)
+            divisor_gid, divisor_weight = find(divisor)
+            if dividend_gid != divisor_gid: # 表明两者还没有连接起来
+                gid_weight[dividend_gid] = (divisor_gid, divisor_weight * value / dividend_weight)
+
+        
+        for (dividend, divisor), value in zip(equations, values):
+            union(dividend, divisor, value)
+
+        results = []
+        
+        for (dividend, divisor) in queries:
+            if dividend not in gid_weight or divisor not in gid_weight:
+                # case 1). at least one variable did not appear before
+                results.append(-1.0)
+            else:
+                dividend_gid, dividend_weight = find(dividend)
+                divisor_gid, divisor_weight = find(divisor)
+                if dividend_gid != divisor_gid:
+                    # case 2). the variables do not belong to the same chain/group
+                    results.append(-1.0)
+                else:
+                    # case 3). there is a chain/path between the variables
+                    results.append(dividend_weight / divisor_weight)
+        return results
+# 下面是常规BFS的写法
+class Solution:
+    def calcEquation(self, equations: List[List[str]], values: List[float], queries: List[List[str]]) -> List[float]:
+        import collections
+        graph = collections.defaultdict(dict)
+        
+        # 构建图 graph的结构是第一个知识点！
+        for (dividend, divisor), value in zip(equations, values):
+            graph[dividend][divisor] = value
+            graph[divisor][dividend] = 1 / value
+        
+        # BFS - 最主要的是queue里面存放的是[node, weight]有一个权重
+        def bfs(src, dst):
+            if not (src in graph and dst in graph):
+                return -1.0
+            queue = collections.deque([(src, 1.0)])
+            visited = set([src]) # visited可以避免套圈！
+            while queue:
+                current, currentProduct = queue.popleft()
+                if current == dst:
+                    return currentProduct
+                for neighbor, value in graph[current].items():
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append((neighbor, currentProduct * value))
+            return -1.0
+        
+        # 对每个查询执行BFS
+        return [bfs(query[0], query[1]) for query in queries]
+
+# 947. Most Stones Removed with Same Row or Column
+# 一旦有坐标连接起来，想一想connected parts，那么每一个parts中的所有stone都可以被Removed but one，那么这一题就变成count parts
+# 那么也可以用disjoint set union来做了。
+# 难点1:如何构造图 -> 我们只用关注石头的index就可以了！坐标帮助我们判断他们是不是邻居！
+# 如果是用DFS的方法做->O(n2)/O(n2)
+class Solution:
+    def removeStones(self, stones: List[List[int]]) -> int:
+        n = len(stones)
+
+        # 构造图
+        adjencency = [[] for _ in range(n)]
+        for i in range(n):
+            x, y = stones[i][0], stones[i][1]
+            for j in range(i+1, n):
+                if stones[j][0] == x or stones[j][1] == y:
+                    adjencency[i].append(j)
+                    adjencency[j].append(i)
+
+        visited = set() # 也可以用[False] * n
+        num_of_parts = 0
+        def dfs(i):
+            visited.add(i)
+            for ni in adjencency[i]:
+                if ni not in visited:
+                    dfs(ni)
+
+        for i in range(n):
+            if i not in visited:
+                dfs(i)
+                num_of_parts += 1
+        return n-num_of_parts
+                
+# UF - O(n)/O(n) nb啊
+# 这一题的思路，我们的坐标是可以通过x/y连接的，那么这个x和y就是属于一组，我们把所有的x，y坐标放在一起，比如[x,y1],[x,y2]，
+# 在union之后，y1和y2肯定也是一个group。我们最后只用找有多少组就可以了。
+class Solution:
+    def removeStones(self, stones):
+        UF = {}
+        def find(x):
+            if x != UF[x]:
+                UF[x] = find(UF[x])
+            return UF[x]
+        def union(x, y):
+            if x not in UF:  # key2: 如果没有办法直接init parent/uf，我们可以在union/find里去init第一次遇到值
+                UF[x] = x
+            if y not in UF:
+                UF[y] = y
+            rootX = find(x)
+            rootY = find(y)
+            if rootX != rootY:
+                UF[rootX] = rootY
+        
+        maxX = 10**4+1
+        for x,y in stones:
+            union(x,y+maxX) # key1: 给y加上偏移量 add an offset to avoid the conflict with x
+
+        return len(stones) - len({find(n) for n in UF})
+    
+# 138. Copy List with Random Pointer
+class Solution:
+    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+        if not head: return None
+        seen = {}
+        def copy_helper(node):
+            if not node: return None
+            if node in seen: return seen[node]
+            copy_node = Node(node.val)
+            seen[node] = copy_node
+            copy_node.next = copy_helper(node.next)
+            copy_node.random = copy_helper(node.random)
+            return copy_node
+        copy_helper(head)
+        return seen[head]
+
+
+# 951. Flip Equivalent Binary Trees
+class Solution:
+    def flipEquiv(self, r1: Optional[TreeNode], r2: Optional[TreeNode]) -> bool:
+        if not r1 and not r2: return True
+        if not r1 or not r2: return False
+        if r1.val != r2.val: return False
+        return (self.flipEquiv(r1.right, r2.right) and self.flipEquiv(r1.left, r2.left)) \
+                or (self.flipEquiv(r1.left, r2.right) and self.flipEquiv(r1.right, r2.left))
+        
+
+# 753. Cracking the Safe # 这道题很难，可以不用看了
+# This is the question about Euler Path(a path visiting every edge exactly once)
+# Euler Circuit == an Euler Path ending where it starts
+# each possible password    -> node
+# each possible digit       -> edge
+# "01" -> 路径0 -> "10"
+# Eular circuit 是本题的答案，因为我们希望每个组合都出现，每个点都出现过；但又是最短，避免重复访问，因此就是eular Circuit
+# 而题意确定了circuit一定存在，存在条件：1.每个node的in/out degree一样。2. 每个结点都在一个连通图里。
+class Solution:
+    def crackSafe(self, n: int, k: int) -> str:
+        seen = set() # node + edge = path
+        ans = []
+        def dfs(node):
+            for x in map(str, range(k)):
+                nei = node + x
+                if nei not in seen:
+                    seen.add(nei)
+                    dfs(nei[1:])
+                    ans.append(x)
+
+        dfs("0"*(n-1)) # 这是初始node
+        print(ans)
+        return "".join(ans) + "0"*(n-1) # 为了返回
+    
+# 857. Minimum Cost to Hire K Workers
+class Solution:
+    def mincostToHireWorkers(self, quality: List[int], wage: List[int], k: int) -> float:
+        n = len(quality)
+        total_cost = math.inf
+        current_total_quality = 0
+        wage_to_quality_ratio = [(wage[i] / quality[i], quality[i]) for i in range(n)]
+        wage_to_quality_ratio.sort(key=lambda x: x[0])
+
+        
+        workers = []
+        # 我们的cost取决于: ratio / quality
+        # 我们排序过后ratio只能是越来越大的，但是quality不一定，因此可能会出现小quality，大ratio的情况，不过没关系，我们也考虑到了。
+        for i in range(n):
+            heapq.heappush(workers, -wage_to_quality_ratio[i][1])
+            current_total_quality += wage_to_quality_ratio[i][1]
+
+            if len(workers) > k:
+                current_total_quality += heapq.heappop(workers) # workers里存的是负数，这里实际是减去一个最大的quality
+
+            if len(workers) == k:
+                total_cost = min(total_cost, current_total_quality * wage_to_quality_ratio[i][0])
+
+        return total_cost
+    
+# 127 word ladder 就是正常的bfs，不过要先构造word_list，注意辅助变量seen和入queue得元素有step
+
+
+
+# 425. Word Squares 这题构建square的思路也是挺有趣的。没遇到过。
+# 这题目用回溯，但是回溯的细节是难点。
+class Solution:
+    def wordSquares(self, words: List[str]) -> List[List[str]]:
+
+        self.words = words
+        self.N = len(words[0])
+        self.buildTrie(self.words)
+
+        results = []
+        word_squares = []
+        for word in words:
+            word_squares = [word]
+            self.backtracking(1, word_squares, results)
+        return results
+
+    # trie
+    # 每一层都会在node[#]留下index，是为了之后找prefix使用。
+    def buildTrie(self, words):
+        self.trie = {}
+
+        for wordIndex, word in enumerate(words):
+            node = self.trie
+            for char in word:
+                if char in node:
+                    node = node[char]
+                else:
+                    newNode = {}
+                    newNode['#'] = []
+                    node[char] = newNode
+                    node = newNode
+                node['#'].append(wordIndex)
+
+    def backtracking(self, step, word_squares, results):
+        if step == self.N:
+            results.append(word_squares[:])
+            return
+
+        prefix = ''.join([word[step] for word in word_squares]) # 理解这一步你需要搞清楚square是如何构建起来的。
+        for candidate in self.getWordsWithPrefix(prefix):
+            word_squares.append(candidate)
+            self.backtracking(step+1, word_squares, results)
+            word_squares.pop()
+
+    def getWordsWithPrefix(self, prefix):
+        node = self.trie
+        for char in prefix:
+            if char not in node:
+                return []
+            node = node[char]
+        return [self.words[wordIndex] for wordIndex in node['#']]
+    
+
+# 247. Strobogrammatic Number II
+# 时间复杂度(5^[n/2])空间(n)
+class Solution:
+    def findStrobogrammatic(self, n: int) -> List[str]:
+        res = []
+        mid = n//2 - n//1
+        # 0, 1, 2, 3, 4     n=5 
+        # 0, 1, 2, 3        n=4 
+        def bt(i, path):
+            if i == n:
+                res.append(path)
+            
+            elif i < n//2:
+                for c in ('1', '0', '8', '6', '9'):
+                    if i == 0 and c == '0': continue
+                    bt(i+1, path+c)
+            
+            elif i == n//2 and n%2 == 1:
+                for c in ('1', '0', '8'):
+                    bt(i+1, path+c)
+                
+            else: 
+                other_index = (n-1)-i
+                other_ch = path[other_index]
+                if other_ch == '6':
+                    bt(i+1, path+'9')
+                elif other_ch == '9':
+                    bt(i+1, path+'6')
+                else:
+                    bt(i+1, path+other_ch)
+
+
+        bt(0, "")
+        return res
+
+
+# 34. Find First and Last Position of Element in Sorted Array 
+# 记得判断 left?=len or left?=target; 如果不用api如何做？
+# 如果用正常的二分流程，当nums[mid] != target的时候一切正常，相同的话需要添加额外的判断
+# if nums[mid]==target：
+#   if isLeft: if mid > 0 and nums[mid-1] == target: 
+#       right = mid-1 else return mid
+# 需要注意了，这里因为我额外调用的binary search，因此有可能会出现L==R，如果用while l<r的话有可能无法进入while循环，导致测试出错。
+
+
+# 315. Count of Smaller Numbers After Self
+# 使用segment Tree = 二叉树 + 每个节点表示一个区间
+# 用于区间查询/修改： 比如区间和/区间最大值/区间最小值
+# 因为315这一道题其实就是查询不同区间内比num小的值，因此可以利用segment tree的特点来查询，将复杂度从N2->nlogn
+class Solution:
+    def countSmaller(self, nums: List[int]) -> List[int]:
+        def update(index, value, tree, size):
+            index += size  # shift the index to the lea
+            # update from leaf to root
+            tree[index] += value # 更新的值，有没有出现过
+            while index > 1:
+                index //= 2
+                tree[index] = tree[index * 2] + tree[index * 2 + 1] 
+
+        def query(left, right, tree, size):
+            # return sum of [left, right)
+            result = 0
+            left += size  # shift the index to the leaf
+            right += size
+            while left < right:
+                # if left is a right node
+                # bring the value and move to parent's right node
+                if left % 2 == 1: # 这里是唯一我没有想明白的点：为什么是右子树，就意味着当前节点是查询范围的最左侧。
+                    result += tree[left]
+                    left += 1
+                
+                left //= 2
+                if right % 2 == 1:
+                    right -= 1
+                    result += tree[right]
+                # else directly move to parent
+                right //= 2
+            return result
+
+        offset = 10**4  # offset negative to non-negative
+        size = 2 * 10**4 + 1  # total possible values in nums # 那么其实size是leaf的数量
+        tree = [0] * (2 * size) # segment tree是complete binary tree，2*size是树所有节点的数量，这一题用的list存放节点，并没有新开一个类。
+        result = []
+        for num in reversed(nums): # 遍 遍历 遍 创建，这样只用遍历nums一次，否则要2次
+            smaller_count = query(0, num + offset, tree, size) # left, right, tree, size
+            result.append(smaller_count)
+            update(num + offset, 1, tree, size) # 用来更新tree
+        return reversed(result)
+# 这种segment tree的做法不用掌握，还是用merge sort/divide and conquer吧
+class Solution:
+    def countSmaller(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        arr = [[v, i] for i, v in enumerate(nums)]  # record value and index
+        result = [0] * n
+
+        def merge_sort(arr, left, right):
+            
+            if right <= left + 1:
+                return    
+            mid = (left + right) // 2
+            merge_sort(arr, left, mid)
+            merge_sort(arr, mid, right)
+            merge(arr, left, right, mid)
+        
+        def merge(arr, left, right, mid):
+            # merge [left, mid) and [mid, right)
+            i = left
+            j = mid
+            temp = []
+            
+            while i < mid and j < right:
+                if arr[i][0] <= arr[j][0]:
+                    result[arr[i][1]] += j - mid
+                    temp.append(arr[i])
+                    i += 1
+                else:
+                    temp.append(arr[j])
+                    j += 1
+            # when one of the subarrays is empty
+            while i < mid:
+                # j - mid numbers jump to the left side of arr[i]
+                result[arr[i][1]] += j - mid
+                temp.append(arr[i])
+                i += 1
+            while j < right:
+                temp.append(arr[j])
+                j += 1
+            # restore from temp
+            for i in range(left, right):
+                arr[i] = temp[i - left]
+
+        merge_sort(arr, 0, n)
+
+        return result
+    
+# 2271. Maximum White Tiles Covered by a Carpet
+# 这一道题有个很关键的点：carpet的右端点放在一段tile的中间，是不如放在tile的右端点的，因为将carpet的右端点从中间移动到右边的过程中，右端点一定会覆盖到tile，而左端点有可能uncover，也有可能跳过某些空白的。
+class Solution:
+    def maximumWhiteTiles(self, tiles: List[List[int]], carpetLen: int) -> int:
+        tiles.sort(key=lambda x: x[0]) # 排序
+        ans = cover = left = 0
+
+        for tl, tr in tiles:
+            cover += tr - tl + 1 # 当前tile cover的上限、
+
+            while tiles[left][1] < tr - carpetLen + 1:  #  如果carpet的左边离开了left指向的tile，那么cover需要减去整段的tile
+                cover -= tiles[left][1] - tiles[left][0] + 1
+                left += 1
+            uncover = max(tr - carpetLen + 1 - tiles[left][0], 0) # uncover主要是负责找左端点在的那段tile中有多少tile没有覆盖，(tr-carpetLen+1)是carpet的左端点。如果左端点在tile上，那么取前面的值，如果在tiles中间的空白部分，前面的值为负，取后面的值0.
+            ans = max(ans, cover - uncover)
+        return ans
+
+# 3413. Maximum Coins From K Consecutive Bags
+# 这一题是2271的variant，加了权重。
+"""
+对于本题来说，如果出现两个相邻区间，左边区间 c 大，右边区间 c 小的情况，那么和右端点对齐就不是最优的，和左端点对齐反而是最优的。
+所以在 2271 题的基础上，额外跑一遍和左端点对齐的滑动窗口即可。
+代码实现时，把 coins 反转，每个区间 [l,r] 改为 [−r,−l]，就可以复用和右端点对齐的代码了。
+"""
+class Solution:
+    # 2271. 毯子覆盖的最多白色砖块数
+    def maximumWhiteTiles(self, tiles: List[List[int]], carpetLen: int) -> int:
+        ans = cover = left = 0
+        for tl, tr, c in tiles:
+            cover += (tr - tl + 1) * c
+            while tiles[left][1] < tr - carpetLen + 1:
+                cover -= (tiles[left][1] - tiles[left][0] + 1) * tiles[left][2]
+                left += 1
+            uncover = max((tr - carpetLen + 1 - tiles[left][0]) * tiles[left][2], 0)
+            ans = max(ans, cover - uncover)
+        return ans
+
+    def maximumCoins(self, coins: List[List[int]], k: int) -> int:
+        coins.sort(key=lambda c: c[0])
+        ans = self.maximumWhiteTiles(coins, k) # 正常右端点
+
+        # 下面的反转和取负操作，相当于把intervals按照x=0对折映射到负值区域上。从而实现代码的复用
+        coins.reverse()
+        for t in coins:
+            t[0], t[1] = -t[1], -t[0]
+        return max(ans, self.maximumWhiteTiles(coins, k))
+
+
+# 852. Peak Index in a Mountain Array
+# 因为确保会有peak element，就意味着是有序的，至少是局部有序。因此我们可以用二分
+# 去判断nums[m] VS num[m+1]
+
+# 5. Longest Palindromic Substring
+# 除了用expand from center O(n2)/O(1)
+# 还可以用dp O(n2)/O(n2)
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        def helper(left, right):
+            while left >= 0 and right < len(s) and s[left] == s[right]:
+                left -= 1
+                right += 1
+            return s[left+1: right]
+        res = ""
+        for i in range(len(s)):
+            res = max(res, helper(i, i), helper(i, i+1), key=len)
+        return res
+
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        n = len(s)
+        dp = [[False] * n for _ in range(n)]
+        ans = [0, 0]
+
+        for i in range(n): # 初始化，自己
+            dp[i][i] = True
+
+        for i in range(n - 1): # 初始化，Pair
+            if s[i] == s[i + 1]:
+                dp[i][i + 1] = True
+                ans = [i, i + 1]
+
+        for diff in range(2, n): # diff + 1是subarray的长度，因为我们已经init长度为1/2的subarry，所以这里我们从diff=2开始。
+            for i in range(n - diff):
+                j = i + diff
+                if s[i] == s[j] and dp[i + 1][j - 1]:
+                    dp[i][j] = True
+                    ans = [i, j]
+
+        i, j = ans
+        return s[i : j + 1]
+
+
+# 410. Split Array Largest Sum 
+# 用二分解决 - 可以使用 二分搜索 的关键原因在于问题具有单调性：随着数组被分割的子数组数量增加，子数组的最大和会逐渐减小。这种单调特性是二分搜索的核心条件。
+
+# 380. Insert Delete GetRandom O(1)
+# 要求是每个func都是O(1)，random我们可以使用random.choice轻松实现
+# 我们肯定是希望用set实现，但是问题set没有办法O(1)实现getRandom，因为set转化为list，为O(n)
+# 因此这里我们用hashmap来记录某个元素在list中的位置/index，当删除时与最后一位swap，再pop list
+from random import choice
+class RandomizedSet():
+    def __init__(self):
+        self.dict = {}
+        self.list = []
+  
+    def insert(self, val: int) -> bool:
+        if val in self.dict:
+            return False
+        self.dict[val] = len(self.list) # 这个就是为了给val上index，这里的Len(self.list)其实就是将要添加的val的index
+        self.list.append(val)
+        return True
+
+    # dict中存放着index和value，我们把最后一位数往list中替换掉，然后pop最后一位
+    def remove(self, val: int) -> bool:
+        if val in self.dict:
+            last_element, idx = self.list[-1], self.dict[val]
+            self.list[idx], self.dict[last_element] = last_element, idx
+            self.list.pop()  #更新list
+            del self.dict[val] #更新dict
+            return True
+        return False
+
+    def getRandom(self) -> int:
+        return choice(self.list)
+
+
+
+# 642. Design Search Autocomplete System
+# common_prefix 很有可能就是trie tree
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.sentences = defaultdict(int) # 每一个node/前缀节点，都会存有完整的sentence和热度（time/count)
+
+class AutocompleteSystem:
+    def __init__(self, sentences: List[str], times: List[int]):
+        self.root = TrieNode()
+        for sentence, count in zip(sentences, times):
+            self.add_to_trie(sentence, count)
+            
+        self.curr_sentence = []
+        self.curr_node = self.root
+        self.dead = TrieNode()
+        
+    def input(self, c: str) -> List[str]:
+        # 如果输入结束，那么像是init一样，重置。
+        if c == "#":
+            curr_sentence = "".join(self.curr_sentence)
+            self.add_to_trie(curr_sentence, 1)
+            self.curr_sentence = []
+            self.curr_node = self.root
+            return []
+        
+        # 这道题的逻辑很困难哦...20-25分钟写不完...题倒是不难。
+        self.curr_sentence.append(c)
+        if c not in self.curr_node.children:
+            self.curr_node = self.dead
+            return []
+        
+        self.curr_node = self.curr_node.children[c]
+        sentences = self.curr_node.sentences
+        sorted_sentences = sorted(sentences.items(), key = lambda x: (-x[1], x[0]))
+        
+        ans = []
+        for i in range(min(3, len(sorted_sentences))):
+            ans.append(sorted_sentences[i][0])
+        
+        return ans
+
+    def add_to_trie(self, sentence, count): # 
+        node = self.root
+        for c in sentence:
+            if c not in node.children:
+                node.children[c] = TrieNode()
+            node = node.children[c]
+            node.sentences[sentence] += count
+
+# 135 Candy
+# 1. 直觉很简单，因为我们要照顾到higher ranking child的neighbor，因此我们可以用两个array，一个用来照顾左边的，一个用来照顾右边的，具体分多少，取决于哪个更大
+# 2. 把方法一简化，只用一个array O(n)/O(n)
+class Solution:
+    def candy(self, ratings):
+        candies = [1] * len(ratings)
+        for i in range(1, len(ratings)):
+            if ratings[i] > ratings[i - 1]:
+                candies[i] = candies[i - 1] + 1
+        sum = candies[-1]
+        for i in range(len(ratings) - 2, -1, -1):
+            if ratings[i] > ratings[i + 1]:
+                candies[i] = max(candies[i], candies[i + 1] + 1)
+            sum += candies[i]
+        return sum
+# 还可以用constant space来解决这个问题。
+
+
+class Solution:
+    def getHint(self, secret: str, guess: str) -> str:
+        # cnt = Counter(secret)
+        a = b = 0
+        
+        # for i in range(len(secret)):
+        #     sc, gc = secret[i], guess[i]
+        #     if sc == gc:
+        #         a += 1
+        #         cnt[sc] -= 1
+
+
+        # for i in range(len(secret)):
+        #     sc, gc = secret[i], guess[i]
+        #     if sc != gc and cnt[gc] > 0:
+        #         b += 1
+        #         cnt[gc] -= 1
+        
+        # 下面是只用one-pass的方法
+        s_cnt = Counter()
+        g_cnt = Counter()
+        for i in range(len(secret)):
+            sc, gc = secret[i], guess[i]
+            if sc == gc:
+                a += 1
+            else:
+                s_cnt[sc] += 1
+                g_cnt[gc] += 1
+        # print(s_cnt & g_cnt)
+        b = (s_cnt & g_cnt).total()
+
+        return str(a)+'A'+str(b)+'B'
+    
+# 308. Range Sum Query 2D - Mutable
+# 如果是update调用的多，那么用BF，如果是query调用的多用presum
+# 如果调用的一样多...用binary Indexed Tree，但是这个我不会.
+
+
+# 731. My Calendar II
+from sortedcontainers import SortedDict
+class MyCalendarTwo:
+    def __init__(self):
+        self.booking_count = SortedDict()
+        self.max_overlapped_booking = 2
+
+    def book(self, start: int, end: int) -> bool:
+        self.booking_count[start] = self.booking_count.get(start, 0) + 1
+        self.booking_count[end] = self.booking_count.get(end, 0) - 1
+
+        overlapped_booking = 0
+        for count in self.booking_count.values():
+            overlapped_booking += count # 因为是sorted，所以这个相当于prefix_sum了
+            if overlapped_booking > self.max_overlapped_booking:
+                # Rollback changes.
+                self.booking_count[start] -= 1
+                self.booking_count[end] += 1
+
+                # Remove entries if their count becomes zero to clean up the SortedDict.
+                if self.booking_count[start] == 0:
+                    del self.booking_count[start]
+
+                return False
+
+        return True
+
+
+
+# Binary Indexed Tree (BIT) 
+    # 通常基于树状数组，用于动态维护前缀和
+    # 快速进行区间查询和单点更新
+   
+# Segment Tree
+    # 用树/数组来模拟
+    # 支持更复杂的区间查询，最大值/最小值/和
+    # 可扩展至多维
+
+
+
+# 如何找所有subarray
+# for start in range(len(arr)):
+#     for end in range(start, len(arr)):
+#         subarrays.append(arr[i:j+1])
+
+# 如何找GCD
+def gcd_manual(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+# 如何找LCM
+def lcm_manual(a, b):
+    return (a * b) // gcd_manual(a, b)
 
 
 

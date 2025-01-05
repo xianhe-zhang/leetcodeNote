@@ -173,35 +173,6 @@ class Solution:
         return res 
 
 
-# ㊗️ 84. Largest Rectangle in Histogram - 这一题的思考很好！尤其是边界问题的思考
-class Solution:
-    
-    def largestRectangleArea(self, heights: List[int]) -> int:
-        stack = []
-        max_area = 0
-        # monotonic increasing stack,
-        # 两个理解的核心点：
-        # 1. when considering rectangle, we take current_height as base point to construct as big as possible rec
-        # 2. current_height is not current_index, it is acutally the element poped.
-        for i in range(len(heights)):
-            print(stack,"---",max_area)
-            # 这里为什么只考虑当前height和其左边的边界，因为我们是基于当前的height！
-            # 原本stack[0,1]，如果满足pop的条件，我的右边界相当于current_index，这是一个技巧。
-            while stack and heights[stack[-1]] >= heights[i]:
-                current_height = heights[stack.pop()]  # here!
-                left_boundary = -1 if not stack else stack[-1]
-                current_width = i - left_boundary - 1 
-                max_area = max(max_area, current_height * current_width)
-            stack.append(i)
-        # 最后留下的值，是遍历完所有的，因此，因此右边界是最右边！也考虑到了bottom值。
-        while stack:
-            current_height = heights[stack.pop()]
-            left_boundary = -1 if not stack else stack[-1]
-            current_width = len(heights) - left_boundary - 1
-            max_area = max(max_area, current_height * current_width)
-        return max_area
-
-
 # 👍 704 - binary search - 练手基本题
 # ㊗️ 74. Search a 2D Matrix
 class Solution:
@@ -1266,6 +1237,14 @@ class Solution:
         return max(cool, sell)
 
 # 👍 518. Coin Change II - 完全背包问题 dp[t] += dp[t-n]
+class Solution:
+    def change(self, amount: int, coins: List[int]) -> int:
+        dp = [0] * (amount + 1)
+        dp[0] = 1
+        for coin in coins: 
+            for i in range(coin, amount+1):
+                dp[i] += dp[i - coin]
+        return dp[amount]
 # ❌ 494. Target Sum
 # BF -- O(2^n): backtracking --> if i==end if total == sum: count++
 # recursion with memorization,多存一个memo{[index, curr_sum]: count} 多加一个判断，if seen: return memo[(index, curr_sum)]
